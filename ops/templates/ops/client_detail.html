@@ -6,9 +6,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 {% endblock %}
 
-{% block shell_class %} font-['Poppins']{% endblock %}
-
-{% block main_attrs %}class="flex-1 overflow-y-auto bg-gradient-to-br from-[#F7F6F5] via-[#F8F3EF] to-[#FBE9DA]"{% endblock %}
+{% block main_attrs %}class="flex-1 overflow-y-auto bg-gradient-to-br from-[#F7F6F5] via-[#F8F3EF] to-[#FBE9DA] font-['Poppins']"{% endblock %}
 
 {% block main %}
 {% with full_name=client.first_name|add:' '|add:client.last_name|default:client.first_name %}

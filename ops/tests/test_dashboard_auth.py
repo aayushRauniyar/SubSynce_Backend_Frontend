@@ -92,7 +92,7 @@ class ClientAccessTests(TestCase):
             # Every page renders the one grouped menu from layouts/app.html, not a second drawer.
             self.assertTemplateUsed(resp, "ops/layouts/app.html")
             self.assertTemplateUsed(resp, "ops/partials/sidebar_links.html")
-            self.assertNotContains(resp, "data-sidebar")
+            self.assertNotContains(resp, "Close menu")
             for link in ("ops:sites", "ops:subcontractors", "ops:schedules", "ops:users",
                          "ops:client_invoices", "ops:invoices"):
                 self.assertContains(resp, reverse(link))
