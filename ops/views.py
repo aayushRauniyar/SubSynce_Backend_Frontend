@@ -316,6 +316,8 @@ def dashboard_view(request):
             'cost': month_cost,
             'profit': month_profit,
             'margin': month_margin,
+            # Bar length: size of the margin, capped at 100%; the colour shows the sign.
+            'margin_bar': min(abs(month_margin), 100),
         },
         'summary': services.admin_summary(start, end),
         'today_jobs': services.todays_schedule(),
