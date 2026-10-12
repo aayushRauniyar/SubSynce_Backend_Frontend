@@ -866,32 +866,46 @@ cd SubSynce_Backend
 **Windows (PowerShell):**
 # SubSync Backend
 
-SubSync is a Django REST API for managing cleaning businesses.
-
-The system manages:
-
-- Users and roles
-- Clients and cleaning sites
-- Contractor assignments
-- Cleaning schedules
-- Completed cleaning work
-- Contractor invoices
-- Client invoices
-- Revenue, expenditure, profit, and dashboards
+SubSync is a Django REST API for cleaning businesses. It manages users, clients,
+sites, schedules, completed work, invoices, and dashboards.
 
 ## Requirements
 
-- Python 3.12 or later
-- Windows PowerShell
-- Git
+- Python 3.12 or newer
+- PowerShell on Windows
+- `virtualenv`
 
 ## Setup
 
-Open PowerShell in the backend directory:
+Run these commands from the project `backend` directory:
 
 ```powershell
+python -m pip install --upgrade pip virtualenv
+virtualenv venv
 python -m venv venv
 .\venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+If PowerShell blocks activation:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy RemoteSigned
+.\venv\Scripts\Activate.ps1
+```
+
+After activation, your PowerShell prompt should show `(venv)`.
+
+## Environment
+
+Copy `sample.env` to `.env` and fill in the secret values:
+
+```powershell
+Copy-Item sample.env .env
+```
+
+At minimum, set these values in `.env`:
 ```
 
 **Windows (Command Prompt):**
@@ -929,6 +943,9 @@ Create a file named `.env` in the project root:
 
 ```env
 DEBUG=True
+SECRET_KEY=your-secret-key
+JWT_KEY=your-jwt-key
+SUPER_ADMIN_PASSWORD=your-password
 SECRET_KEY=your-super-secret-key-change-this-in-production
 JWT_ACCESS_TOKEN_LIFETIME_HRS=4
 JWT_REFRESH_TOKEN_LIFETIME_HRS=48
@@ -939,23 +956,22 @@ DB_ENGINE=django.db.backends.sqlite3
 DB_NAME=db.sqlite3
 ```
 
-Do not use development secrets in production. Keep real secrets out of source control.
+Keep `.env` private and do not commit real secrets.
 
 ## Database
 
-After activating the virtual environment, run:
-
 ```powershell
 python manage.py check
-python manage.py makemigrations
 python manage.py migrate
 ```
 
-Create a Django admin user when needed:
+Create an owner account for administration:
 
 ```powershell
 python manage.py createsuperuser
 ```
+
+Superusers are created with the `OWNER` role.
 
 ## Run the API
 
@@ -963,19 +979,21 @@ python manage.py createsuperuser
 python manage.py migrate
 ```
 
-The API is available at `http://127.0.0.1:8000/`.
+The API runs at `http://127.0.0.1:8000/`.
 
 ## API Documentation
 
-- Swagger UI: `http://127.0.0.1:8000/api/swagger/`
-- OpenAPI schema: `http://127.0.0.1:8000/api/schema/`
+- Swagger: `http://127.0.0.1:8000/api/swagger/`
 - ReDoc: `http://127.0.0.1:8000/api/redoc/`
+- OpenAPI schema: `http://127.0.0.1:8000/api/schema/`
 
-## Main API Groups
+## API Groups
 
-- `/api/v1/admin/`
-- `/api/v1/owner/`
-- `/api/v1/user/`
+```text
+/api/v1/owner/
+/api/v1/admin/
+/api/v1/user/
+```
 
 Most endpoints require a JWT access token:
 
@@ -983,44 +1001,29 @@ Most endpoints require a JWT access token:
 Authorization: Bearer <access-token>
 ```
 
-## Important Endpoints
+## Roles
 
-### Contractor
-
-- `/api/v1/user/schedule/` - View assigned schedules
-- `/api/v1/user/clock-in/` - Start scheduled work
-- `/api/v1/user/clock-out/<id>/` - Complete work
-- `/api/v1/user/invoices/` - Submit and view contractor invoices
-- `/api/v1/user/dashboard/` - View the contractor dashboard
-
-### Administrator
-
-- `/api/v1/admin/client/` - Manage clients
-- `/api/v1/admin/site/` - Manage sites
-- `/api/v1/admin/schedule/` - Manage schedules
-- `/api/v1/admin/work/` - Review completed work
-- `/api/v1/admin/invoices/` - Review contractor invoices
-- `/api/v1/admin/client-invoice/` - Manage client invoices
-- `/api/v1/admin/dashboard/` - View the administrator dashboard
-
-Dashboard date filters use:
-
-```text
-?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD
-```
-
-## User Roles
-
-The application supports these roles:
-
-- `OWNER`
-- `ADMINISTRATOR`
-- `CONTRACTOR`
-
-Role permissions are enforced by the API. An owner can create administrators or contractors. An administrator can create contractors. Contractors cannot create accounts.
+- `OWNER`: creates administrators and contractors.
+- `ADMINISTRATOR`: manages clients, sites, schedules, work, and invoices.
+- `CONTRACTOR`: views assigned work, clocks in and out, and manages contractor invoices.
 
 ## Common Commands
 
+Run all tests:
+
+```powershell
+python -m pytest
+```
+
+Run one test:
+
+```powershell
+python -m pytest -k test_name -s
+```
+
+Other useful commands:
+
+```powershell
 ```bash
 # Run server
 python manage.py runserver
