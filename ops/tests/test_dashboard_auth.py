@@ -83,15 +83,19 @@ class ClientAccessTests(TestCase):
         login(self.client, make_user("OWNER"))
         self.assertEqual(self.client.get(reverse("ops:clients")).status_code, 200)
 
-    def test_client_pages_use_shared_app_shell(self):
+    def test_admin_pages_use_shared_app_shell(self):
         login(self.client, make_user("OWNER"))
-        for name in ("ops:clients", "ops:client_create"):
+        names = ("ops:dashboard", "ops:clients", "ops:client_create", "ops:sites",
+                 "ops:subcontractors", "ops:schedules", "ops:users", "ops:calendar")
+        for name in names:
             resp = self.client.get(reverse(name))
-            # The approved Clients / Add Client pages use the shared SubSync sidebar + top bar.
-            self.assertTemplateUsed(resp, "ops/partials/_sidebar.html")
-            self.assertTemplateUsed(resp, "ops/partials/_topbar.html")
-            self.assertContains(resp, reverse("ops:client_invoices"))
-            self.assertContains(resp, reverse("ops:invoices"))
+            # Every page renders the one grouped menu from layouts/app.html, not a second drawer.
+            self.assertTemplateUsed(resp, "ops/layouts/app.html")
+            self.assertTemplateUsed(resp, "ops/partials/sidebar_links.html")
+            self.assertNotContains(resp, "data-sidebar")
+            for link in ("ops:sites", "ops:subcontractors", "ops:schedules", "ops:users",
+                         "ops:client_invoices", "ops:invoices"):
+                self.assertContains(resp, reverse(link))
 
     def test_reusing_deleted_clients_phone_shows_error_not_500(self):
         login(self.client, make_user("ADMINISTRATOR"))

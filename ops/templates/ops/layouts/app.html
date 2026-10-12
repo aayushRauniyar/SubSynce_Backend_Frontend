@@ -1,12 +1,13 @@
 {% extends 'base.html' %}
 {% comment %}
 Shared app shell: sidebar (desktop), top bar with theme toggle, bottom nav (mobile).
-Pages fill {% block page %}.
+Pages fill {% block page %}, or override {% block main %} to supply their own container.
+Optional: shell_class, main_attrs, after_shell (modals rendered outside the shell).
 {% endcomment %}
 
 {% block content %}
 <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-card">Skip to content</a>
-<div class="flex h-screen overflow-hidden">
+<div class="flex h-screen overflow-hidden{% block shell_class %}{% endblock %}">
     <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-sidenav border-r border-surface-container-high">
         <div class="flex items-center gap-3 px-6 py-5 border-b border-surface-container-high">
             <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
@@ -54,11 +55,14 @@ Pages fill {% block page %}.
             </div>
         </header>
 
-        <main id="main" class="flex-1 overflow-y-auto">
+        <main id="main" {% block main_attrs %}class="flex-1 overflow-y-auto"{% endblock %}>
+            {% block main %}
             <div class="w-full max-w-7xl mx-auto px-4 lg:px-6 py-6">
                 {% block page %}{% endblock %}
             </div>
+            {% endblock %}
         </main>
     </div>
 </div>
+{% block after_shell %}{% endblock %}
 {% endblock %}

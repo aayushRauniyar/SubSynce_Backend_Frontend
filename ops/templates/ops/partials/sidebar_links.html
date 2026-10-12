@@ -8,8 +8,17 @@
 <a href="{% url 'ops:calendar' %}" class="{{ link }} {% nav_class 'calendar' %}">
     <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Calendar</span>
 </a>
-<a href="{% url 'ops:clients' %}" class="{{ link }} {% nav_class 'clients' 'client_create' %}">
+<a href="{% url 'ops:clients' %}" class="{{ link }} {% nav_class 'clients' 'client_create' 'client_detail' %}">
     <span class="material-symbols-outlined" aria-hidden="true">person</span><span>Clients</span>
+</a>
+<a href="{% url 'ops:sites' %}" class="{{ link }} {% nav_class 'sites' %}">
+    <span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Sites</span>
+</a>
+<a href="{% url 'ops:subcontractors' %}" class="{{ link }} {% nav_class 'subcontractors' %}">
+    <span class="material-symbols-outlined" aria-hidden="true">engineering</span><span>Subcontractors</span>
+</a>
+<a href="{% url 'ops:schedules' %}" class="{{ link }} {% nav_class 'schedules' %}">
+    <span class="material-symbols-outlined" aria-hidden="true">event</span><span>Schedules</span>
 </a>
 <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-light">Records</p>
 <a href="{% url 'ops:completions' %}" class="{{ link }} {% nav_class 'completions' 'completion_detail' %}">
@@ -26,8 +35,11 @@
 <a href="{% url 'ops:profitability' %}" class="{{ link }} {% nav_class 'profitability' %}">
     <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span><span>Profitability</span>
 </a>
-{% if user.role == 'OWNER' %}
 <p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-light">Admin</p>
+<a href="{% url 'ops:users' %}" class="{{ link }} {% nav_class 'users' %}">
+    <span class="material-symbols-outlined" aria-hidden="true">group</span><span>Users</span>
+</a>
+{% if user.role == 'OWNER' %}
 <a href="{% url 'ops:company_settings' %}" class="{{ link }} {% nav_class 'company_settings' %}">
     <span class="material-symbols-outlined" aria-hidden="true">settings</span><span>Company Settings</span>
 </a>
