@@ -107,6 +107,46 @@ def contractor_jobs(user):
     return ServiceSchedule.objects.filter(site__assigned_contractor=user).select_related("site")
 
 
+def contractor_dashboard(user, start=None, end=None):
+    """
+    The ContractorDashboard API's figures (dashboard/api/views/user_views.py,
+    GET /api/v1/user/dashboard/), same queries and keys, for the session-based portal.
+    Only this contractor's sites, schedules, work and invoices are counted.
+    """
+    sites = Site.objects.filter(assigned_contractor=user)
+    schedules = ServiceSchedule.objects.filter(site__assigned_contractor=user)
+    work = CompleteWork.objects.filter(completed_by=user)
+    invoices = ContractorInvoice.objects.filter(created_by=user)
+    if start:
+        schedules = schedules.filter(scheduled_date__gte=start)
+        work = work.filter(schedule__scheduled_date__gte=start)
+        invoices = invoices.filter(invoice_date__gte=start)
+    if end:
+        schedules = schedules.filter(scheduled_date__lte=end)
+        work = work.filter(schedule__scheduled_date__lte=end)
+        invoices = invoices.filter(invoice_date__lte=end)
+    approved = invoices.filter(status="APPROVED")
+    return {
+        "sites": {"assigned": sites.count()},
+        "services": {
+            "scheduled": schedules.filter(status="SCHEDULED").count(),
+            "completed": work.filter(status="COMPLETED").count(),
+            "in_progress": work.filter(status="IN_PROGRESS").count(),
+            "missed": work.filter(status="MISSED").count(),
+            "cancelled": schedules.filter(status="CANCELLED").count(),
+        },
+        "invoices": {
+            "pending": invoices.filter(status="PENDING").count(),
+            "approved": approved.count(),
+            "rejected": invoices.filter(status="REJECTED").count(),
+        },
+        "earnings": {
+            "approved_invoice_count": approved.count(),
+            "total_earnings": _total(approved),
+        },
+    }
+
+
 def contractor_summary(user, today=None):
     today = today or date.today()
     jobs = contractor_jobs(user)

@@ -78,6 +78,13 @@
                                                     class="p-2 rounded-lg border border-surface-container-high hover:bg-surface-container transition-colors">
                                                 <span class="material-symbols-outlined text-ink-light" style="font-size: 18px;">visibility</span>
                                             </button>
+                                            <button type="button" title="Edit" onclick="openEditModal(this.dataset)"
+                                                    data-action="{% url 'ops:subcontractor_update' contractor.id %}"
+                                                    data-first_name="{{ detail.first_name|default:'' }}" data-last_name="{{ detail.last_name|default:'' }}"
+                                                    data-username="{{ contractor.username }}" data-email="{{ contractor.email|default:'' }}" data-phone="{{ detail.phone|default:'' }}"
+                                                    class="p-2 rounded-lg border border-surface-container-high hover:bg-surface-container transition-colors">
+                                                <span class="material-symbols-outlined text-primary" style="font-size: 18px;">edit</span>
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -170,9 +177,66 @@
         </div>
     </div>
 </div>
+
+<!-- Edit Subcontractor Modal (role stays Contractor; passwords change via Forgot Password) -->
+<div id="edit-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeEditModal();">
+    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+        <div class="flex items-center justify-between mb-5">
+            <h2 class="text-lg font-semibold text-ink">Edit Subcontractor</h2>
+            <button type="button" onclick="closeEditModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
+                <span class="material-symbols-outlined text-ink-light">close</span>
+            </button>
+        </div>
+        <form id="edit-form" method="post">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+            <input type="hidden" name="role" value="CONTRACTOR">
+            {% for e in edit_state.errors.non_field %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-first_name">First Name *</label>
+                    <input type="text" name="first_name" id="edit-first_name" required maxlength="255"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.first_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-last_name">Last Name</label>
+                    <input type="text" name="last_name" id="edit-last_name" maxlength="255"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.last_name %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-username">Username *</label>
+                    <input type="text" name="username" id="edit-username" required maxlength="255" autocomplete="off"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.username %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-email">Email *</label>
+                    <input type="email" name="email" id="edit-email" required
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.email %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+                <div class="sm:col-span-2">
+                    <label class="block text-sm font-medium text-ink mb-1.5" for="edit-phone">Phone</label>
+                    <input type="text" name="phone" id="edit-phone" maxlength="255" inputmode="tel"
+                           class="w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm">
+                    {% for e in edit_state.errors.phone %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
+                </div>
+            </div>
+            <div class="flex items-center justify-end gap-3 mt-6">
+                <button type="button" onclick="closeEditModal()"
+                        class="px-4 py-2.5 rounded-xl border border-surface-container-high text-sm font-medium text-ink hover:bg-surface-container transition-colors">Cancel</button>
+                <button type="submit"
+                        class="px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-on-primary text-sm font-medium transition-colors">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
 {% endblock %}
 
 {% block extra_js %}
+{{ edit_state.modal|json_script:"edit-modal-reopen" }}
 <script>
     function showModal(el) {
         closeViewModal();
@@ -198,10 +262,31 @@
         hideModal(document.getElementById('view-modal'));
     }
 
+    // `data` comes from an Edit button's data-* attributes (or the reopen state after a failed save).
+    function openEditModal(data, keepErrors) {
+        if (!keepErrors) document.querySelectorAll('#edit-form .form-error').forEach(function (el) { el.remove(); });
+        document.getElementById('edit-form').action = data.action;
+        ['first_name', 'last_name', 'username', 'email', 'phone'].forEach(function (name) {
+            document.getElementById('edit-' + name).value = data[name] || '';
+        });
+        closeViewModal();
+        const modal = document.getElementById('edit-modal');
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+
+    function closeEditModal() {
+        hideModal(document.getElementById('edit-modal'));
+    }
+
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
             closeViewModal();
+            closeEditModal();
         }
     });
+
+    const reopenEdit = JSON.parse(document.getElementById('edit-modal-reopen').textContent);
+    if (reopenEdit) openEditModal(reopenEdit, true);
 </script>
 {% endblock %}

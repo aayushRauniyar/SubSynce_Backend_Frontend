@@ -85,40 +85,43 @@
     <div class="flex-1 flex flex-col overflow-hidden">
         {% include 'ops/partials/_topbar.html' with display_name=full_name role_label='Subcontractor' %}
 
-        <main class="flex-1 overflow-y-auto bg-[linear-gradient(312deg,#FCE2CD,#F4F3F3)]">
+        <main class="flex-1 overflow-y-auto bg-surface">
             <div class="w-full px-4 sm:px-8 lg:px-14 py-8">
                 <div class="mb-8">
                     <h1 class="text-2xl font-semibold text-[#222222]">Subcontractor Portal</h1>
                     <p class="mt-1 text-base text-[#494949]">Welcome back, {{ full_name }}. Here's your overview for today.</p>
                 </div>
 
-                <!-- Summary cards (real data; empty states when there's nothing yet) -->
-                {% with card='bg-white rounded-2xl border border-[#5B5A77]/10 shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-5 flex items-start justify-between gap-3' icon='w-10 h-10 shrink-0 rounded-full flex items-center justify-center' title='text-xs text-[#494949]' value='mt-2 text-2xl font-semibold text-[#222222]' sub='mt-1 text-[11px] text-[#494949]' %}
+                <!-- Summary cards: the ContractorDashboard API's sites / services / invoices / earnings (own data only) -->
+                {% with card='bg-white rounded-2xl border border-[#5B5A77]/10 shadow-[0_2px_12px_rgba(0,0,0,0.04)] p-5 flex items-start justify-between gap-3' icon='w-10 h-10 shrink-0 rounded-full flex items-center justify-center' title='text-xs text-[#494949]' value='mt-2 text-2xl font-semibold text-[#222222]' sub='mt-1 text-[11px] text-[#494949]' d=dashboard %}
                 <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-4">
                     <div class="{{ card }}">
-                        <div><p class="{{ title }}">Today's Jobs</p><p class="{{ value }}">{{ today_jobs_count }}</p><p class="{{ sub }}">Assigned to you</p></div>
-                        <span class="{{ icon }} bg-[#FAF2E8] text-[#F27E22]"><span class="material-symbols-outlined" style="font-size: 20px;">assignment</span></span>
+                        <div><p class="{{ title }}">Assigned Sites</p><p class="{{ value }}">{{ d.sites.assigned }}</p><p class="{{ sub }}">Site{{ d.sites.assigned|pluralize }} assigned to you</p></div>
+                        <span class="{{ icon }} bg-[#FAF2E8] text-[#F27E22]"><span class="material-symbols-outlined" style="font-size: 20px;">location_on</span></span>
                     </div>
                     <div class="{{ card }}">
-                        <div>
-                            <p class="{{ title }}">Next Service</p>
-                            {% if next_service %}
-                            <p class="{{ value }}">{{ next_service.time|time:"g:i A" }}</p><p class="{{ sub }}">{{ next_service.relative }}</p>
-                            {% else %}
-                            <p class="{{ value }} text-[#494949]">—</p><p class="{{ sub }}">No upcoming service</p>
-                            {% endif %}
-                        </div>
-                        <span class="{{ icon }} bg-[#EEEAFD] text-[#7C6AE8]"><span class="material-symbols-outlined" style="font-size: 20px;">schedule</span></span>
+                        <div><p class="{{ title }}">Services</p><p class="{{ value }}">{{ d.services.scheduled }}</p><p class="{{ sub }}">Scheduled · {{ d.services.completed }} completed</p></div>
+                        <span class="{{ icon }} bg-[#EEEAFD] text-[#7C6AE8]"><span class="material-symbols-outlined" style="font-size: 20px;">event_available</span></span>
                     </div>
-                    <div class="{{ card }}">
-                        <div><p class="{{ title }}">Completed This Week</p><p class="{{ value }}">{{ completed_this_week }}</p><p class="{{ sub }}">Jobs completed</p></div>
-                        <span class="{{ icon }} bg-[#E3F8EC] text-[#34C27A]"><span class="material-symbols-outlined" style="font-size: 20px;">check_circle</span></span>
-                    </div>
-                    <div class="{{ card }}">
-                        <div><p class="{{ title }}">Pending Invoices</p><p class="{{ value }}">${{ pending_invoices.total|floatformat:"2g" }}</p><p class="{{ sub }}">{{ pending_invoices.count }} invoice{{ pending_invoices.count|pluralize }} pending</p></div>
+                    <a href="{% url 'ops:invoices' %}" class="{{ card }} hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-label="View my invoices">
+                        <div><p class="{{ title }}">Invoices</p><p class="{{ value }}">{{ d.invoices.pending }}</p><p class="{{ sub }}">Pending · {{ d.invoices.approved }} approved · {{ d.invoices.rejected }} rejected</p></div>
                         <span class="{{ icon }} bg-[#FFF6DB] text-[#E0A800]"><span class="material-symbols-outlined" style="font-size: 20px;">receipt_long</span></span>
+                    </a>
+                    <div class="{{ card }}">
+                        <div><p class="{{ title }}">Earnings</p><p class="{{ value }}">${{ d.earnings.total_earnings|floatformat:"2g" }}</p><p class="{{ sub }}">From {{ d.earnings.approved_invoice_count }} approved invoice{{ d.earnings.approved_invoice_count|pluralize }}</p></div>
+                        <span class="{{ icon }} bg-[#E3F8EC] text-[#34C27A]"><span class="material-symbols-outlined" style="font-size: 20px;">payments</span></span>
                     </div>
                 </div>
+
+                <!-- Services by status (same five counts as the API's `services`) -->
+                <section class="bg-white rounded-2xl border border-[#5B5A77]/10 shadow-[0_2px_12px_rgba(0,0,0,0.04)] px-5 py-4 mb-4 flex flex-wrap items-center gap-x-3 gap-y-2" aria-label="Services by status">
+                    <h2 class="text-sm font-medium text-[#222222] mr-2">Services</h2>
+                    <span class="pill pill-scheduled">Scheduled {{ d.services.scheduled }}</span>
+                    <span class="pill pill-in_progress">In progress {{ d.services.in_progress }}</span>
+                    <span class="pill pill-completed">Completed {{ d.services.completed }}</span>
+                    <span class="pill pill-missed">Missed {{ d.services.missed }}</span>
+                    <span class="pill pill-cancelled">Cancelled {{ d.services.cancelled }}</span>
+                </section>
                 {% endwith %}
 
                 <div class="flex flex-col xl:flex-row gap-4 items-start">

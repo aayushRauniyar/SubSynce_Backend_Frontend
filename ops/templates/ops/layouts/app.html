@@ -1,12 +1,16 @@
 {% extends 'base.html' %}
 {% comment %}
-Shared app shell: sidebar (desktop), top bar with theme toggle, bottom nav (mobile).
-Pages fill {% block page %}.
+Shared app shell. Pages fill {% block page %}.
+Staff (Owner / Administrator) get the shared partials/_sidebar.html + _topbar.html used across SubSync;
+contractors keep their own sidebar (partials/sidebar_links.html) and mobile menu.
 {% endcomment %}
 
 {% block content %}
 <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-card">Skip to content</a>
 <div class="flex h-screen overflow-hidden">
+    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}
+    {% include 'ops/partials/_sidebar.html' %}
+    {% else %}
     <aside class="hidden lg:flex lg:flex-col lg:w-64 bg-sidenav border-r border-surface-container-high">
         <div class="flex items-center gap-3 px-6 py-5 border-b border-surface-container-high">
             <div class="w-9 h-9 rounded-xl bg-primary flex items-center justify-center">
@@ -23,8 +27,12 @@ Pages fill {% block page %}.
             </a>
         </div>
     </aside>
+    {% endif %}
 
     <div class="flex-1 flex flex-col overflow-hidden">
+        {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}
+        {% include 'ops/partials/_topbar.html' %}
+        {% else %}
         <header class="sticky top-0 z-30 bg-card border-b border-surface-container-high">
             <div class="flex items-center justify-between gap-3 px-4 lg:px-6 py-3">
                 <details class="lg:hidden relative">
@@ -42,17 +50,10 @@ Pages fill {% block page %}.
                 <button type="button" data-theme-toggle class="p-2 rounded-xl border border-surface-container-high hover:bg-surface-container transition-colors" aria-label="Toggle theme">
                     <span class="material-symbols-outlined text-ink-light" style="font-size: 20px;" data-theme-icon aria-hidden="true">light_mode</span>
                 </button>
-                <div class="flex items-center gap-2">
-                    <div class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span class="material-symbols-outlined text-primary" style="font-size: 18px;" aria-hidden="true">person</span>
-                    </div>
-                    <div class="hidden md:flex flex-col leading-tight">
-                        <span class="text-sm font-semibold text-ink">{{ user.username }}</span>
-                        <span class="text-xs text-ink-light">{{ user.role|title }}</span>
-                    </div>
-                </div>
+                {% include 'ops/partials/_account_menu.html' %}
             </div>
         </header>
+        {% endif %}
 
         <main id="main" class="flex-1 overflow-y-auto">
             <div class="w-full max-w-7xl mx-auto px-4 lg:px-6 py-6">

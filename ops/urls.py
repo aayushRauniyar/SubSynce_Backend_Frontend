@@ -41,6 +41,7 @@ urlpatterns = [
 
     # Subcontractors (protected - Administrator only, read-only)
     path('subcontractors/', views.subcontractors_view, name='subcontractors'),
+    path('subcontractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
 
     # Password reset (Django's built-in views and tokens)
     path('forgot-password/', auth_views.PasswordResetView.as_view(

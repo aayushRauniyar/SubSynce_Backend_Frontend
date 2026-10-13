@@ -14,7 +14,7 @@
     <div class="flex-1 flex flex-col overflow-hidden">
         {% include 'ops/partials/_topbar.html' %}
 
-        <main class="flex-1 overflow-y-auto bg-gradient-to-br from-[#F7F6F5] via-[#F8F3EF] to-[#FBE9DA]">
+        <main class="flex-1 overflow-y-auto bg-surface">
             <div class="w-full max-w-[1184px] px-4 sm:px-8 lg:px-14 py-8">
                 <!-- Breadcrumb + title -->
                 <nav class="flex flex-wrap items-center gap-1.5 text-xs text-[#888]">
@@ -78,7 +78,7 @@
                         <table class="w-full min-w-[720px] text-xs text-[#222222]">
                             <thead class="bg-[#F3F3F3] text-[#494949] uppercase border-b border-[#E2E2E2]">
                                 <tr>
-                                    <th class="px-6 py-4 font-medium text-left">Site Name</th>
+                                    <th class="px-6 py-4 font-medium text-left">Site</th>
                                     <th class="px-4 py-4 font-medium">Address</th>
                                     <th class="px-4 py-4 font-medium">Frequency</th>
                                     <th class="px-4 py-4 font-medium">Price</th>
@@ -89,7 +89,9 @@
                                 {% for site in sites %}
                                 {% with freq=site.cleaning_frequency|lower %}
                                 <tr class="border-b border-[#E2E2E2] last:border-0">
-                                    <td class="px-6 py-6">{{ site.name }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center gap-3 min-w-0">{% include 'ops/partials/_site_thumb.html' %}<span class="min-w-0 break-words">{{ site.name }}</span></div>
+                                    </td>
                                     <td class="px-4 py-6 text-center text-[#494949] leading-relaxed max-w-[240px] mx-auto">{{ site.address }}</td>
                                     <td class="px-4 py-6 text-center">
                                         <span class="inline-block px-3 py-1 rounded-md text-[10px]

@@ -89,6 +89,59 @@ html.dark .bg-white {
     background-color: rgb(var(--c-surface-lowest));
 }
 
+/* ---------------------------------------------------------------------------
+ * Dark mode for the SubSync page designs (Clients, Sites, Schedules, Users,
+ * Subcontractors, Dashboard, portal…). Those templates use the Figma hex
+ * colours as Tailwind arbitrary values, which don't follow the theme. In dark
+ * mode only, map each one onto the palette tokens the Calendar uses, so light
+ * mode stays exactly as designed and no page needs its own dark styles.
+ * ------------------------------------------------------------------------- */
+:root { --ring-track: #ECE6DE; }
+html.dark { --ring-track: rgb(var(--c-surface-high)); }
+
+/* Text */
+html.dark .text-\[\#222222\], html.dark .text-\[\#202224\], html.dark .text-black,
+html.dark .hover\:text-\[\#222222\]:hover { color: rgb(var(--c-ink)); }
+html.dark .text-\[\#494949\], html.dark .text-\[\#888\] { color: rgb(var(--c-ink-light)); }
+html.dark .text-\[\#494949\]\/60 { color: rgb(var(--c-ink-light) / 0.6); }
+html.dark .text-\[\#494949\]\/50 { color: rgb(var(--c-ink-light) / 0.5); }
+html.dark .text-\[\#494949\]\/40 { color: rgb(var(--c-ink-light) / 0.4); }
+html.dark .placeholder\:text-\[\#494949\]\/60::placeholder { color: rgb(var(--c-ink-light) / 0.7); }
+html.dark .placeholder\:text-\[\#494949\]\/50::placeholder { color: rgb(var(--c-ink-light) / 0.6); }
+html.dark .text-\[\#F27E22\] { color: rgb(var(--c-primary)); }
+html.dark .text-\[\#F27E22\]\/40 { color: rgb(var(--c-primary) / 0.4); }
+html.dark .text-\[\#4A90E2\], html.dark .text-\[\#3B5BDB\] { color: rgb(var(--c-scheduled)); }
+html.dark .text-\[\#34C27A\] { color: rgb(var(--c-success)); }
+html.dark .text-\[\#7C6AE8\], html.dark .text-\[\#6E62E5\] { color: rgb(var(--c-violet)); }
+html.dark .text-\[\#E0A800\] { color: rgb(var(--c-warning)); }
+html.dark .text-\[\#FF383C\], html.dark .text-\[\#EF4444\] { color: rgb(var(--c-error)); }
+
+/* Borders and dividers */
+html.dark .border-\[\#E2E2E2\], html.dark .border-\[\#5B5A77\]\/20, html.dark .border-\[\#5B5A77\]\/10,
+html.dark .border-\[\#494949\]\/30, html.dark .border-\[\#494949\]\/25, html.dark .border-\[\#494949\]\/20,
+html.dark .border-\[\#ADADAD\]\/50, html.dark .border-\[\#E9E2DC\], html.dark .border-\[\#F0E6DD\] { border-color: var(--outline-variant); }
+html.dark .border-\[\#E9E9E9\], html.dark .divide-\[\#E9E9E9\] > :not([hidden]) ~ :not([hidden]) { border-color: var(--hairline); }
+html.dark .border-\[\#FF383C\], html.dark .border-\[\#EF4444\] { border-color: rgb(var(--c-error)); }
+html.dark .border-\[\#FF383C\]\/30 { border-color: rgb(var(--c-error) / 0.4); }
+html.dark .bg-\[\#5B5A77\]\/20 { background-color: var(--outline-variant); }
+
+/* Neutral surfaces (table headers, neutral pills, hovers) */
+html.dark .bg-\[\#F3F3F3\], html.dark .hover\:bg-\[\#F3F3F3\]:hover, html.dark .hover\:bg-white:hover { background-color: rgb(var(--c-surface-c)); }
+html.dark .bg-\[\#494949\]\/\[0\.02\] { background-color: rgb(var(--c-ink) / 0.03); }
+
+/* Pale accent tints -> the same translucent tints the status pills use */
+html.dark .bg-\[\#FAF2E8\], html.dark .bg-\[\#FDEEE4\], html.dark .bg-\[\#F5EEE6\], html.dark .bg-\[\#F5EEE0\],
+html.dark .bg-\[\#F27E22\]\/10 { background-color: rgb(var(--c-primary) / 0.14); }
+html.dark .hover\:bg-\[\#FAF2E8\]:hover, html.dark .hover\:bg-\[\#FAF2E8\]\/60:hover { background-color: rgb(var(--c-primary) / 0.10); }
+html.dark .bg-\[\#E3F0FF\] { background-color: rgb(var(--c-scheduled) / 0.14); }
+html.dark .bg-\[\#E3F8EC\] { background-color: rgb(var(--c-success) / 0.14); }
+html.dark .bg-\[\#EEEAFD\], html.dark .bg-\[\#ECEAFD\] { background-color: rgb(var(--c-violet) / 0.16); }
+html.dark .bg-\[\#FFF6DB\] { background-color: rgb(var(--c-warning) / 0.14); }
+html.dark .bg-\[\#FF383C\]\/5, html.dark .hover\:bg-\[\#EF4444\]\/5:hover { background-color: rgb(var(--c-error) / 0.10); }
+
+/* Clients / Subcontractors use an orange table header in light mode; dark mode gets the standard dark header. */
+html.dark thead tr.bg-primary { background-color: rgb(var(--c-surface-c)); color: rgb(var(--c-ink-light)); }
+
 :focus-visible {
     outline: 2px solid rgb(var(--c-primary));
     outline-offset: 2px;

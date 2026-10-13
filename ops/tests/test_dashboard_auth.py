@@ -70,8 +70,13 @@ class DashboardTests(TestCase):
         resp = self.client.get(reverse("ops:dashboard"))
         # Contractors get the approved Subcontractor Portal (with Check In / Check Out).
         self.assertTemplateUsed(resp, "ops/subcontractor_portal.html")
-        self.assertEqual(resp.context["summary"]["earnings"], Decimal("1280.00"))
-        self.assertNotIn("revenue", resp.context["summary"])
+        # Same structure as the ContractorDashboard API (sites / services / invoices / earnings).
+        d = resp.context["dashboard"]
+        self.assertEqual(d["earnings"]["total_earnings"], Decimal("1280.00"))
+        self.assertEqual(d["earnings"]["approved_invoice_count"], 1)
+        self.assertEqual(d["sites"]["assigned"], 1)
+        self.assertEqual(d["services"]["completed"], 1)
+        self.assertNotIn("revenue", d)
 
     def test_anonymous_redirects_to_login(self):
         resp = self.client.get(reverse("ops:dashboard"))

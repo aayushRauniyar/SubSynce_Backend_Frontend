@@ -211,6 +211,31 @@ class UserForm(forms.ModelForm):
         return user
 
 
+class SubcontractorForm(UserForm):
+    """Edit a contractor from the Subcontractors page: UserForm plus the UserDetail phone; role stays CONTRACTOR."""
+
+    phone = forms.CharField(max_length=255, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["role"].choices = [("CONTRACTOR", "Contractor")]
+        detail = getattr(self.instance, "user_detail", None)
+        if detail:
+            self.initial["phone"] = detail.phone
+
+    def clean_phone(self):
+        # UserDetail.phone is unique, including soft-deleted rows still in the table.
+        phone = self.cleaned_data["phone"].strip() or None
+        if phone and UserDetail.global_objects.filter(phone=phone).exclude(user=self.instance).exists():
+            raise forms.ValidationError("Another user already has this phone number.")
+        return phone
+
+    def save(self):
+        user = super().save()
+        UserDetail.objects.filter(user=user).update(phone=self.cleaned_data["phone"])
+        return user
+
+
 def clean_evidence_photos(files):
     """Validate work evidence photos: real images, 5MB max each."""
     field = forms.ImageField()
