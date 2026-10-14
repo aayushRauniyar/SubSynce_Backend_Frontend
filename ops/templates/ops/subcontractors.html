@@ -185,12 +185,12 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-ink mb-1" for="add-password1">Password *</label>
-                    <input type="password" name="password1" id="add-password1" required class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" autocomplete="new-password">
+                    <div class="relative"><input type="password" name="password1" id="add-password1" required class="w-full h-10 pl-3 pr-10 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" autocomplete="new-password"><button type="button" data-show-password="add-password1" aria-label="Show password" aria-pressed="false" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-ink-light hover:text-ink"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">visibility_off</span></button></div>
                     {% for e in add_state.errors.password1 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-ink mb-1" for="add-password2">Confirm Password *</label>
-                    <input type="password" name="password2" id="add-password2" required class="w-full h-10 px-3 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" autocomplete="new-password">
+                    <div class="relative"><input type="password" name="password2" id="add-password2" required class="w-full h-10 pl-3 pr-10 rounded-xl bg-white border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm" autocomplete="new-password"><button type="button" data-show-password="add-password2" aria-label="Show password" aria-pressed="false" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-ink-light hover:text-ink"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">visibility_off</span></button></div>
                     {% for e in add_state.errors.password2 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
                 </div>
             </div>

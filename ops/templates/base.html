@@ -102,6 +102,31 @@
     
     <!-- JavaScript -->
     <script src="{% static 'js/theme.js' %}"></script>
+    <script>
+        // Show/hide for password fields: a button with data-show-password="<input id>" flips the input
+        // between password and text. Used when creating accounts and setting a new password.
+        document.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-show-password]');
+            if (!button) return;
+            var input = document.getElementById(button.dataset.showPassword);
+            if (!input) return;
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            button.setAttribute('aria-pressed', show ? 'true' : 'false');
+            button.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            button.querySelector('.material-symbols-outlined').textContent = show ? 'visibility' : 'visibility_off';
+        });
+        // Re-hide passwords whenever a form is reset (closing and reopening a modal).
+        document.addEventListener('reset', function (event) {
+            event.target.querySelectorAll('[data-show-password]').forEach(function (button) {
+                var input = document.getElementById(button.dataset.showPassword);
+                if (input) input.type = 'password';
+                button.setAttribute('aria-pressed', 'false');
+                button.setAttribute('aria-label', 'Show password');
+                button.querySelector('.material-symbols-outlined').textContent = 'visibility_off';
+            });
+        }, true);
+    </script>
     {% block extra_js %}{% endblock %}
     
     <!-- Mobile sidebar drawer: works for any page with a [data-sidebar] aside -->

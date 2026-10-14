@@ -186,12 +186,12 @@
                 <div id="user-password-fields" class="sm:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="{{ label }}" for="user-password1">Password *</label>
-                        <input type="password" name="password1" id="user-password1" required autocomplete="new-password" class="{{ field }}">
+                        <div class="relative"><input type="password" name="password1" id="user-password1" required autocomplete="new-password" class="{{ field }} !pr-10"><button type="button" data-show-password="user-password1" aria-label="Show password" aria-pressed="false" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-ink-light hover:text-ink"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">visibility_off</span></button></div>
                     <p class="mt-1 text-[11px] text-ink-light">At least 8 characters with an uppercase letter, a lowercase letter, a number and a special character (@#$%!^&amp;*). Not too similar to the username or email.</p>{% for e in user_form_state.errors.password1 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
                     </div>
                     <div>
                         <label class="{{ label }}" for="user-password2">Confirm Password *</label>
-                        <input type="password" name="password2" id="user-password2" required autocomplete="new-password" class="{{ field }}">
+                        <div class="relative"><input type="password" name="password2" id="user-password2" required autocomplete="new-password" class="{{ field }} !pr-10"><button type="button" data-show-password="user-password2" aria-label="Show password" aria-pressed="false" class="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-ink-light hover:text-ink"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">visibility_off</span></button></div>
                     {% for e in user_form_state.errors.password2 %}<p class="form-error mt-1 text-xs text-error">{{ e }}</p>{% endfor %}
                     </div>
                 </div>
