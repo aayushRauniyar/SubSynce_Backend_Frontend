@@ -56,18 +56,10 @@ def _build_contractor_portal_context(request):
     """
     user = request.user
     today = timezone.localdate()
-    my_schedules = ServiceSchedule.objects.filter(site__assigned_contractor=user)
+    my_schedules = ServiceSchedule.objects.filter(site__assigned_contractor=user).select_related('site', 'work_completion')
 
-    assigned = (
-        my_schedules.filter(status='SCHEDULED', scheduled_date__gte=today)
-        .select_related('site')
-        .order_by('scheduled_date', 'scheduled_time')[:6]
-    )
-    assigned_jobs = []
-    for schedule in assigned:
-        work = getattr(schedule, 'work_completion', None)
-        badge = work.status.replace('_', ' ').title() if work else schedule.status.title()
-        assigned_jobs.append({
+    def row(schedule):
+        return {
             'time': schedule.scheduled_time,
             'date': schedule.scheduled_date,
             'is_today': schedule.scheduled_date == today,
@@ -75,13 +67,35 @@ def _build_contractor_portal_context(request):
             'site_name': schedule.site.name,
             'site_address': schedule.site.address,
             'service_info': schedule.site.cleaning_frequency,
-            'status': badge,
-        })
+            'status': services.job_status(schedule).replace('_', ' ').title(),
+        }
 
-    return {
-        'dashboard': services.contractor_dashboard(user),  # summary cards: same figures as the ContractorDashboard API
-        'assigned_jobs': assigned_jobs,
-    }
+    context = {'dashboard': services.contractor_dashboard(user)}  # summary cards: same figures as the ContractorDashboard API
+
+    if request.GET.get('jobs') == 'week':
+        # Weekly: every job Monday to Sunday (done, missed and cancelled too); ?week= moves by week.
+        anchor = services.parse_date(request.GET.get('week')) or today
+        week_start = anchor - timedelta(days=anchor.weekday())
+        week_end = week_start + timedelta(days=6)
+        jobs = list(my_schedules.filter(scheduled_date__range=(week_start, week_end)).order_by('scheduled_date', 'scheduled_time'))
+        days = []
+        for offset in range(7):
+            day = week_start + timedelta(days=offset)
+            days.append({'date': day, 'is_today': day == today, 'jobs': [row(j) for j in jobs if j.scheduled_date == day]})
+        context.update({
+            'jobs_mode': 'week',
+            'week_days': days,
+            'week_start': week_start,
+            'week_end': week_end,
+            'week_job_count': len(jobs),
+            'prev_week': week_start - timedelta(days=7),
+            'next_week': week_start + timedelta(days=7),
+            'is_this_week': week_start <= today <= week_end,
+        })
+    else:
+        assigned = my_schedules.filter(status='SCHEDULED', scheduled_date__gte=today).order_by('scheduled_date', 'scheduled_time')[:6]
+        context.update({'jobs_mode': 'upcoming', 'assigned_jobs': [row(s) for s in assigned]})
+    return context
 
 
 def login_view(request):

@@ -56,3 +56,35 @@ class ContractorDetailPagesTests(TestCase):
         self.client.logout()
         login(self.client, self.admin)
         self.assertNotEqual(self.client.get(reverse("ops:my_site_detail", args=[self.site.pk])).status_code, 200)
+
+
+class ContractorWeeklyJobsTests(TestCase):
+    def setUp(self):
+        from datetime import date
+        self.admin = make_user("ADMINISTRATOR")
+        self.alex = make_user("CONTRACTOR", username="alex")
+        self.site = make_site(contractor=self.alex, name="Shield Station")
+        self.monday = date(2026, 10, 12)
+        self.tue = make_schedule(self.site, self.admin, day=self.monday + timedelta(days=1))
+        self.done = make_schedule(self.site, self.admin, day=self.monday, status="COMPLETED")
+        self.next_week = make_schedule(self.site, self.admin, day=self.monday + timedelta(days=8))
+        other = make_user("CONTRACTOR")
+        self.not_mine = make_schedule(make_site(contractor=other, name="Not Mine"), self.admin, day=self.monday)
+        login(self.client, self.alex)
+
+    def test_weekly_shows_every_job_that_week_by_day(self):
+        resp = self.client.get(reverse("ops:dashboard"), {"jobs": "week", "week": "2026-10-14"})
+        self.assertEqual(resp.context["week_start"], self.monday)
+        self.assertEqual(len(resp.context["week_days"]), 7)
+        self.assertEqual(resp.context["week_job_count"], 2)  # includes the completed one
+        self.assertContains(resp, reverse("ops:my_job_detail", args=[self.tue.pk]))
+        self.assertContains(resp, reverse("ops:my_job_detail", args=[self.done.pk]))
+        self.assertNotContains(resp, reverse("ops:my_job_detail", args=[self.next_week.pk]))
+        self.assertNotContains(resp, "Not Mine")
+        self.assertContains(resp, "week=2026-10-19")  # next-week link
+
+    def test_weekly_button_is_a_working_link(self):
+        resp = self.client.get(reverse("ops:dashboard"))
+        self.assertContains(resp, "?jobs=week")
+        self.assertNotContains(resp, "isn&#x27;t built yet")
+        self.assertEqual(resp.context["jobs_mode"], "upcoming")
