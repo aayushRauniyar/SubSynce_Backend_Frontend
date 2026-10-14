@@ -332,6 +332,12 @@ html.dark [data-ui="contractor"] .ui-card-link:hover { box-shadow: 0 4px 14px rg
 [data-ui="contractor"] .ui-empty .material-symbols-outlined { font-size: 32px; color: rgb(var(--c-outline)); }
 [data-ui="contractor"] .ui-empty.ui-empty-sm { padding: 24px 16px; }
 
+/* Every role: the sidebar's logo block and the top bar share one fixed 64px height, so their
+   bottom borders line up. Without this each sized itself from its padding and contents
+   (logo block 77px, top bar about 70px) and the two lines sat at different heights. */
+.ui-sidebar-brand { height: 64px; padding-top: 0; padding-bottom: 0; box-sizing: content-box; } /* + 1px border, same as the header */
+.ui-topbar-inner { height: 64px; padding-top: 0; padding-bottom: 0; }
+
 /* Sidebar: 256px, 32px inner gutter, 40px rows, pale orange active item */
 [data-ui="contractor"] .ui-sidebar-brand { height: 64px; padding: 0 32px; }
 [data-ui="contractor"] .ui-sidebar-nav { padding: 16px; }
