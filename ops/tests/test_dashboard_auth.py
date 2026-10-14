@@ -181,3 +181,19 @@ class ClientFilterExportTests(TestCase):
         resp = self.client.get(reverse("ops:clients"), {"format": "csv"})
         self.assertEqual(resp.status_code, 302)
         self.assertNotIn("text/csv", resp.get("Content-Type", ""))
+
+    def test_status_column_shows_real_status_badges(self):
+        resp, _ = self._listed()
+        self.assertContains(resp, ">Status</th>")
+        self.assertContains(resp, '<span class="pill pill-active">Active</span>', count=2, html=True)
+        self.assertContains(resp, '<span class="pill pill-inactive">Inactive</span>', count=1, html=True)
+
+    def test_status_column_handles_blank_and_unexpected_values(self):
+        from client.model.clientmanage import Client
+        Client.objects.filter(pk=self.other_active.pk).update(status="")
+        Client.objects.filter(pk=self.inactive.pk).update(status="ARCHIVED")
+        resp, names = self._listed()
+        self.assertEqual(names, {"Acme", "Old", "Zeta"})
+        self.assertContains(resp, '<span class="pill pill-active">Active</span>', count=1, html=True)
+        self.assertNotContains(resp, "pill-inactive")  # no made-up status for the blank one
+        self.assertContains(resp, '<span class="pill pill-archived">ARCHIVED</span>', html=True)
