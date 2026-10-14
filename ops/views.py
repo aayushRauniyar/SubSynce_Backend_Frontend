@@ -18,7 +18,7 @@ from django.views.decorators.http import require_POST, require_http_methods
 from client.model.clientmanage import Client, Site, SiteImage
 from authuser.model.user import User
 from schedule.model.cleaningschedule import ServiceSchedule
-from work.model.workcomplete import CompleteWork, WorkCompleteImage
+from work.model.workcomplete import CompleteWork
 from invoice.model.invoicemanagement import ClientInvoice, ContractorInvoice
 from ops import services
 from ops.access import STAFF_ROLES, contractor_required, forbidden, is_contractor, is_staff_user
@@ -75,22 +75,9 @@ def _build_contractor_portal_context(request):
             'status': badge,
         })
 
-    # Quick actions (same rules as the work API): check in to today's not-yet-started
-    # scheduled jobs; check out of your own work that hasn't been checked out.
-    check_in_jobs = (
-        my_schedules.filter(status='SCHEDULED', scheduled_date=today, work_completion__isnull=True)
-        .select_related('site').order_by('scheduled_time')
-    )
-    active_work = (
-        CompleteWork.objects.filter(completed_by=user, check_out_time__isnull=True)
-        .select_related('schedule__site').order_by('check_in_time')
-    )
-
     return {
         'dashboard': services.contractor_dashboard(user),  # summary cards: same figures as the ContractorDashboard API
         'assigned_jobs': assigned_jobs,
-        'check_in_jobs': check_in_jobs,
-        'active_work': active_work,
     }
 
 
@@ -942,56 +929,6 @@ def _uuid_or_none(value):
         return uuid.UUID(str(value))
     except ValueError:
         return None
-
-
-@login_required
-@require_POST
-def portal_check_in_view(request):
-    """Contractor clock-in, mirroring the work API's ClockInView rules."""
-    if request.user.role != 'CONTRACTOR':
-        messages.error(request, 'Only contractors can check in.')
-        return redirect('ops:dashboard')
-    schedule = ServiceSchedule.objects.filter(
-        id=_uuid_or_none(request.POST.get('schedule')), site__assigned_contractor=request.user, status='SCHEDULED'
-    ).select_related('site').first()
-    if not schedule:
-        messages.error(request, 'No scheduled service found for you.')
-    elif CompleteWork.objects.filter(schedule=schedule).exists():
-        messages.error(request, 'Work has already been started for this schedule.')
-    else:
-        CompleteWork.objects.create(schedule=schedule, completed_by=request.user, check_in_time=timezone.now())
-        messages.success(request, f'Checked in at {schedule.site.name}.')
-    return redirect('ops:dashboard')
-
-
-@login_required
-@require_POST
-def portal_check_out_view(request):
-    """Contractor clock-out / completion submission, mirroring the work API's ClockOutView."""
-    if request.user.role != 'CONTRACTOR':
-        messages.error(request, 'Only contractors can check out.')
-        return redirect('ops:dashboard')
-    work = CompleteWork.objects.filter(
-        id=_uuid_or_none(request.POST.get('work')), completed_by=request.user, check_out_time__isnull=True
-    ).select_related('schedule__site').first()
-    if not work:
-        messages.error(request, 'No active work found.')
-        return redirect('ops:dashboard')
-    images = request.FILES.getlist('images')
-    try:
-        clean_evidence_photos(images)
-    except ValidationError as e:
-        messages.error(request, ' '.join(e.messages))
-        return redirect('ops:dashboard')
-    with transaction.atomic():
-        work.check_out_time = timezone.now()
-        work.status = 'COMPLETED'
-        work.completion_notes = request.POST.get('completion_notes', '').strip() or work.completion_notes
-        work.save()
-        for image in images:
-            WorkCompleteImage.objects.create(work_completion=work, evidence_photo=image)
-    messages.success(request, f'Work at {work.schedule.site.name} submitted as completed.')
-    return redirect('ops:dashboard')
 
 
 @contractor_required

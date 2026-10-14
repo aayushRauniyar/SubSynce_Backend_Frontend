@@ -62,16 +62,10 @@ urlpatterns = [
         template_name='ops/password_reset_complete.html',
     ), name='password_reset_complete'),
 
-    # Contractor portal quick actions (session versions of the work API's clock-in/out)
-    path('portal/check-in/', views.portal_check_in_view, name='portal_check_in'),
-    path('portal/check-out/', views.portal_check_out_view, name='portal_check_out'),
-
-    # Work completion (contractor clock-in/out, staff log)
+    # Work completion (contractor jobs, staff log)
     path('jobs/', views_work.my_jobs_view, name='my_jobs'),
     path('my-sites/', views.my_sites_view, name='my_sites'),
     path('my-earnings/', views.my_earnings_view, name='my_earnings'),
-    path('jobs/<uuid:schedule_id>/clock-in/', views_work.clock_in_view, name='clock_in'),
-    path('work/<uuid:work_id>/clock-out/', views_work.clock_out_view, name='clock_out'),
     path('work/<uuid:work_id>/', views_work.work_detail_view, name='work_detail'),
     path('completions/', views_work.completions_view, name='completions'),
     path('completions/<uuid:work_id>/', views_work.work_detail_view, name='completion_detail'),

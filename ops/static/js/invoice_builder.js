@@ -7,6 +7,7 @@
     var list = document.getElementById('items');
     var template = document.getElementById('item-template');
     var totalForms = form.querySelector('input[name="items-TOTAL_FORMS"]');
+    var gstBox = document.getElementById('id_gst');
     var money = new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' });
 
     function cents(value) {
@@ -36,7 +37,14 @@
             total += line;
             qty += parseFloat(q) || 0;
         });
-        document.getElementById('grand-total').textContent = money.format(total / 100);
+        // GST is 10% of the ex-GST subtotal, rounded to the cent (ops.services.invoice_totals).
+        var gst = gstBox && gstBox.checked ? Math.round(total / 10) : 0;
+        form.querySelectorAll('[data-gst-row]').forEach(function (row) {
+            row.classList.toggle('hidden', !(gstBox && gstBox.checked));
+        });
+        document.getElementById('subtotal').textContent = money.format(total / 100);
+        document.getElementById('gst-total').textContent = money.format(gst / 100);
+        document.getElementById('grand-total').textContent = money.format((total + gst) / 100);
         document.getElementById('line-count').textContent = rows.length;
         document.getElementById('qty-total').textContent = Math.round(qty * 100) / 100;
     }
@@ -57,6 +65,7 @@
     });
 
     list.addEventListener('input', recalc);
+    if (gstBox) gstBox.addEventListener('change', recalc);
 
     // Client invoices: show who is billed and suggest the site's price.
     var sitePicker = form.querySelector('[data-site-picker]');

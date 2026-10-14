@@ -112,6 +112,7 @@ def invoice_create_view(request):
                     invoice_date=data["invoice_date"],
                     service_period_start=data["service_period_start"],
                     service_period_end=data["service_period_end"],
+                    gst=data["gst"],
                     amount=Decimal("0.00"),
                     created_by=request.user,
                 )
@@ -140,7 +141,7 @@ def invoice_edit_view(request, pk):
         if header.is_valid() and formset.is_valid():
             data = header.cleaned_data
             with transaction.atomic():
-                for field in ("invoice_number", "site", "invoice_date", "service_period_start", "service_period_end"):
+                for field in ("invoice_number", "site", "invoice_date", "service_period_start", "service_period_end", "gst"):
                     setattr(invoice, field, data[field])
                 _save_builder(invoice, header, formset)
             messages.success(request, f"Invoice {invoice.invoice_number} updated.")
@@ -155,6 +156,7 @@ def invoice_edit_view(request, pk):
             "service_period_end": invoice.service_period_end,
             "notes": extra.notes if extra else (invoice.remarks or ""),
             "terms": extra.terms if extra else "",
+            "gst": invoice.gst,
         })
         items = [
             {"description": i.description, "quantity": i.quantity, "unit_price": i.unit_price}
@@ -184,6 +186,7 @@ def invoice_detail_view(request, pk):
         "invoice": invoice,
         "items": invoice.line_items.all(),
         "extra": getattr(invoice, "builder", None),
+        "totals": services.invoice_totals(invoice),
         "decision_form": DecisionForm(),
     }
     if is_staff_user(request.user):
@@ -204,6 +207,7 @@ def invoice_decide_view(request, pk):
             "invoice": invoice,
             "items": invoice.line_items.all(),
             "extra": getattr(invoice, "builder", None),
+            "totals": services.invoice_totals(invoice),
             "decision_form": form,
             "check": services.verify_invoice(invoice),
         }, status=400)
@@ -225,5 +229,6 @@ def invoice_print_view(request, pk):
         "invoice": invoice,
         "items": items,
         "extra": getattr(invoice, "builder", None),
+        "totals": services.invoice_totals(invoice),
         "company": CompanyProfile.load(),
     })

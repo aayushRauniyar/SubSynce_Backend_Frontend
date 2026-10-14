@@ -55,7 +55,7 @@
                     <td class="px-5 py-3">{{ inv.site.name }}</td>
                     {% if user.role != 'CONTRACTOR' %}<td class="px-5 py-3">{{ inv.created_by.username }}</td>{% endif %}
                     <td class="px-5 py-3 text-ink-light whitespace-nowrap">{{ inv.service_period_start|date:"j M" }} – {{ inv.service_period_end|date:"j M Y" }}</td>
-                    <td class="px-5 py-3 text-right font-semibold tabular-nums">{{ inv.amount|money }}</td>
+                    <td class="px-5 py-3 text-right font-semibold tabular-nums">{{ inv.amount|money }}{% if inv.gst %}<span class="block text-xs font-normal text-ink-light">+ GST</span>{% endif %}</td>
                     <td class="px-5 py-3"><span class="pill pill-{{ inv.status|lower }}">{{ inv.status|label }}</span></td>
                 </tr>
                 {% endfor %}

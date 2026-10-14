@@ -86,17 +86,6 @@
                     </section>
 
                     <div class="w-full xl:w-[340px] shrink-0 flex flex-col gap-4">
-                        <!-- Quick Actions: session version of the work API's clock-out (records completion) -->
-                        <section class="card p-5" aria-labelledby="actions-heading">
-                            <h2 id="actions-heading" class="ui-section-title mb-4">Quick Actions</h2>
-                            <button type="button" onclick="openWorkModal()"
-                                    class="flex w-full items-center gap-3 text-left rounded-lg p-1.5 -m-1.5 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
-                                    {% if not active_work %}disabled title="No work in progress"{% endif %}>
-                                <span class="ui-card-icon bg-primary/10 text-primary"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">task</span></span>
-                                <span><span class="block text-sm font-medium text-ink">Submit Completion</span><span class="block text-xs text-ink-light">Submit work for review</span></span>
-                            </button>
-                        </section>
-
                         <!-- Alerts: no notification backend exists yet -->
                         <section class="card p-5" aria-labelledby="alerts-heading">
                             <div class="flex items-center justify-between gap-3 mb-4">
@@ -112,58 +101,4 @@
     </div>
 </div>
 
-{% with label='ui-label' box='bg-card border border-surface-container-high rounded-2xl w-full max-w-[480px] max-h-[90vh] overflow-y-auto p-6' %}
-<!-- Submit Completion modal (the backend records check-out and completion in one clock-out) -->
-<div id="checkout-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeWorkModals();">
-    <div class="{{ box }}" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
-        <div class="flex items-center justify-between mb-5">
-            <h2 id="checkout-title" class="text-lg font-semibold text-ink">Submit Completion</h2>
-            <button type="button" onclick="closeWorkModals()" class="ui-btn ui-btn-icon text-ink-light hover:bg-surface-container" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
-        </div>
-        <form method="post" action="{% url 'ops:portal_check_out' %}" enctype="multipart/form-data" class="space-y-4">
-            {% csrf_token %}
-            <div>
-                <label class="{{ label }}" for="checkout-work">Job in progress *</label>
-                <select name="work" id="checkout-work" required class="field-input">
-                    {% for w in active_work %}<option value="{{ w.id }}">{{ w.schedule.site.name }} · checked in {{ w.check_in_time|date:"D d M, g:i A" }}</option>{% endfor %}
-                </select>
-            </div>
-            <div>
-                <label class="{{ label }}" for="checkout-notes">Completion notes</label>
-                <textarea name="completion_notes" id="checkout-notes" rows="3" class="field-input"></textarea>
-            </div>
-            <div>
-                <label class="{{ label }}" for="checkout-images">Evidence photos</label>
-                <input type="file" name="images" id="checkout-images" multiple accept="image/*" class="ui-file">
-                <p class="ui-help mt-1">Optional. Images up to 5MB each.</p>
-            </div>
-            <p class="ui-help">Checking out records the end time and marks the job as completed.</p>
-            <div class="flex items-center justify-end gap-3 pt-2">
-                <button type="button" onclick="closeWorkModals()" class="ui-btn ui-btn-secondary">Cancel</button>
-                <button type="submit" class="ui-btn ui-btn-primary">Submit</button>
-            </div>
-        </form>
-    </div>
-</div>
-{% endwith %}
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    function openWorkModal() {
-        const modal = document.getElementById('checkout-modal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-    }
-
-    function closeWorkModals() {
-        const modal = document.getElementById('checkout-modal');
-        modal.classList.remove('flex');
-        modal.classList.add('hidden');
-    }
-
-    document.addEventListener('keydown', function (event) {
-        if (event.key === 'Escape') closeWorkModals();
-    });
-</script>
 {% endblock %}
