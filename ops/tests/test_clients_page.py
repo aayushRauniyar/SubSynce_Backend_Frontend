@@ -20,3 +20,9 @@ class ClientsListTests(TestCase):
         login(self.client, make_user("ADMINISTRATOR"))
         resp = self.client.get(reverse("ops:client_detail", args=[site.client_id.pk]))
         self.assertContains(resp, f'<a href="{reverse("ops:site_detail", args=[site.pk])}"')
+
+    def test_add_client_page_has_one_heading(self):
+        login(self.client, make_user("ADMINISTRATOR"))
+        resp = self.client.get(reverse("ops:client_create"))
+        self.assertContains(resp, "<h1", count=1)
+        self.assertContains(resp, "</nav>", count=resp.content.decode().count("<nav"))
