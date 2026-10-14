@@ -7,7 +7,7 @@
 <a href="{% if invoice %}{% url 'ops:client_invoice_detail' invoice.pk %}{% else %}{% url 'ops:client_invoices' %}{% endif %}" class="inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4">
     <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">arrow_back</span>{% if invoice %}Back to Invoice{% else %}Client Invoices{% endif %}
 </a>
-<h1 class="text-2xl font-bold text-ink mb-1">{% if invoice %}Edit {{ invoice.invoice_number }}{% else %}New Client Invoice{% endif %}</h1>
+<h1 class="text-2xl font-semibold text-ink mb-1">{% if invoice %}Edit {{ invoice.invoice_number }}{% else %}New Client Invoice{% endif %}</h1>
 <p class="text-ink-light text-sm mb-5">Bill a client for work at one of their sites. The client is taken from the site.</p>
 
 {% if not has_sites %}

@@ -2,12 +2,8 @@
 
 {% block title %}Schedules - SubSync{% endblock %}
 
-{% block extra_head %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
-<div class="flex h-screen overflow-hidden font-['Poppins']">
+<div class="flex h-screen overflow-hidden">
     {% include 'ops/partials/_sidebar.html' with active='schedules' %}
 
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -172,7 +168,7 @@
 <!-- Add / Edit Schedule modal -->
 {% with field='w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm' label='block text-sm font-medium text-ink mb-1.5' %}
 <div id="schedule-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeScheduleModal();">
-    <div class="bg-white rounded-2xl w-full max-w-[650px] max-h-[90vh] overflow-y-auto p-6 font-['Poppins']">
+    <div class="bg-white rounded-2xl w-full max-w-[650px] max-h-[90vh] overflow-y-auto p-6">
         <div class="flex items-center justify-between mb-5">
             <h2 id="schedule-modal-title" class="text-lg font-semibold text-ink">Add Schedule</h2>
             <button type="button" onclick="closeScheduleModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
@@ -228,7 +224,7 @@
 
 <!-- Change Status modal -->
 <div id="status-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeStatusModal();">
-    <div class="bg-white rounded-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto p-6 font-['Poppins']">
+    <div class="bg-white rounded-2xl w-full max-w-sm max-h-[90vh] overflow-y-auto p-6">
         <div class="flex items-center justify-between mb-1">
             <h2 class="text-lg font-semibold text-ink">Change Status</h2>
             <button type="button" onclick="closeStatusModal()" class="p-1.5 rounded-lg hover:bg-surface-container">

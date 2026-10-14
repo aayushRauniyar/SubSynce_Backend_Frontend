@@ -6,7 +6,7 @@
 {% block page %}
 <div class="ui-page-header flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
     <div>
-        <h1 class="ui-title text-2xl font-bold text-ink">{% if scope == 'mine' %}My Calendar{% else %}Calendar{% endif %}</h1>
+        <h1 class="ui-title text-2xl font-semibold text-ink">{% if scope == 'mine' %}My Calendar{% else %}Calendar{% endif %}</h1>
         <p class="ui-subtitle text-ink-light text-sm mt-1">{% if scope == 'mine' %}Jobs on the sites assigned to you.{% else %}Every scheduled job across all sites.{% endif %}</p>
     </div>
     <div class="flex items-center gap-2">

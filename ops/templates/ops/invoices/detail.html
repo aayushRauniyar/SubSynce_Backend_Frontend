@@ -9,7 +9,7 @@
 </a>
 <div class="ui-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
     <div class="flex flex-wrap items-center gap-3">
-        <h1 class="ui-title text-2xl font-bold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
+        <h1 class="ui-title text-2xl font-semibold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
         <span class="pill pill-{{ invoice.status|lower }}">{{ invoice.status|label }}</span>
         {% if check.flags and invoice.status == 'PENDING' %}<span class="pill pill-flagged">{{ check.flags|length }} flag{{ check.flags|length|pluralize }}</span>{% endif %}
     </div>

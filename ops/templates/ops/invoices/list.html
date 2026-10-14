@@ -6,7 +6,7 @@
 {% block page %}
 <div class="ui-page-header flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
     <div>
-        <h1 class="ui-title text-2xl font-bold text-ink">{% if user.role == 'CONTRACTOR' %}My Invoices{% else %}Contractor Invoices{% endif %}</h1>
+        <h1 class="ui-title text-2xl font-semibold text-ink">{% if user.role == 'CONTRACTOR' %}My Invoices{% else %}Contractor Invoices{% endif %}</h1>
         <p class="ui-subtitle text-ink-light text-sm mt-1">{% if user.role == 'CONTRACTOR' %}Bill for completed work and track each invoice's status.{% else %}Check each invoice against recorded work, then approve or reject it.{% endif %}</p>
     </div>
     {% if user.role == 'CONTRACTOR' %}
@@ -33,7 +33,7 @@
         </div>
         {% if chart.has_data %}
         <div class="relative h-12 mt-3 ml-9">
-            <div class="absolute -left-9 inset-y-0 w-8 flex flex-col justify-between text-right text-[9px] leading-none text-ink-light tabular-nums -my-[3px]" aria-hidden="true">
+            <div class="absolute -left-9 inset-y-0 w-8 flex flex-col justify-between text-right text-[10px] leading-none text-ink-light tabular-nums -my-[3px]" aria-hidden="true">
                 {% for label in chart.scale %}<span>{{ label }}</span>{% endfor %}
             </div>
             <svg viewBox="0 0 1000 100" preserveAspectRatio="none" class="absolute inset-0 w-full h-full overflow-visible" role="img"

@@ -11,7 +11,7 @@
     <a href="{% url 'ops:completions' %}" class="inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4"><span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">arrow_back</span>Work Completions</a>
     {% endif %}
     <div class="flex flex-wrap items-center gap-3">
-        <h1 class="ui-title text-2xl font-bold text-ink">{{ work.schedule.site.name }}</h1>
+        <h1 class="ui-title text-2xl font-semibold text-ink">{{ work.schedule.site.name }}</h1>
         <span class="pill pill-{{ work.status|lower }}">{{ work.status|label }}</span>
     </div>
     <p class="ui-subtitle text-ink-light text-sm mt-1">{{ work.schedule.site.address }}</p>

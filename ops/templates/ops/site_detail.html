@@ -3,12 +3,8 @@
 
 {% block title %}{{ site.name }} - SubSync{% endblock %}
 
-{% block extra_head %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
-<div class="flex h-screen overflow-hidden font-['Poppins']">
+<div class="flex h-screen overflow-hidden">
     {% include 'ops/partials/_sidebar.html' with active='sites' %}
 
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -32,7 +28,7 @@
                 {% with freq=site.cleaning_frequency|lower %}
                 <section class="bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-6" aria-labelledby="details-heading">
                     <h2 id="details-heading" class="text-base font-semibold text-[#222222] mb-5">Site Details</h2>
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-5 text-[13px]">
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-5 text-sm">
                         <div>
                             <dt class="text-[#888]">Client</dt>
                             <dd class="mt-1 font-medium text-[#222222]"><a href="{% url 'ops:client_detail' site.client_id_id %}" class="hover:text-[#F27E22] hover:underline">{{ site.client_id.first_name }} {{ site.client_id.last_name|default:'' }}</a></dd>
