@@ -112,6 +112,24 @@ def contractor_jobs(user):
     return ServiceSchedule.objects.filter(site__assigned_contractor=user).select_related("site")
 
 
+def monthly_approved_earnings(user, months=12, today=None):
+    """Approved invoice totals per month (by invoice date) for the last `months` months, oldest first."""
+    today = today or date.today()
+    starts = []
+    year, month = today.year, today.month
+    for _ in range(months):
+        starts.append(date(year, month, 1))
+        year, month = (year - 1, 12) if month == 1 else (year, month - 1)
+    starts.reverse()
+    totals = {
+        (row["invoice_date__year"], row["invoice_date__month"]): row["total"]
+        for row in ContractorInvoice.objects.filter(
+            created_by=user, status="APPROVED", invoice_date__gte=starts[0]
+        ).values("invoice_date__year", "invoice_date__month").annotate(total=Sum("amount"))
+    }
+    return [{"month": s, "total": totals.get((s.year, s.month)) or ZERO} for s in starts]
+
+
 def contractor_dashboard(user, start=None, end=None):
     """
     The ContractorDashboard API's figures (dashboard/api/views/user_views.py,

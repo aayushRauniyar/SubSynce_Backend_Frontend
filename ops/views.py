@@ -1036,17 +1036,3 @@ def my_sites_view(request):
         )
     )
     return render(request, 'ops/contractor/my_sites.html', {'sites': sites})
-
-
-@contractor_required
-def my_earnings_view(request):
-    """The contractor's earnings: same figures as ContractorDashboard `earnings`, plus the approved invoices behind them."""
-    approved = (
-        ContractorInvoice.objects.filter(created_by=request.user, status='APPROVED')
-        .select_related('site').order_by('-invoice_date', '-created_at')
-    )
-    context = {
-        'earnings': services.contractor_dashboard(request.user)['earnings'],
-        'invoices': approved,
-    }
-    return render(request, 'ops/contractor/my_earnings.html', context)
