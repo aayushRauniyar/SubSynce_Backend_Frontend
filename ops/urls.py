@@ -68,6 +68,8 @@ urlpatterns = [
 
     # Work completion (contractor clock-in/out, staff log)
     path('jobs/', views_work.my_jobs_view, name='my_jobs'),
+    path('my-sites/', views.my_sites_view, name='my_sites'),
+    path('my-earnings/', views.my_earnings_view, name='my_earnings'),
     path('jobs/<uuid:schedule_id>/clock-in/', views_work.clock_in_view, name='clock_in'),
     path('work/<uuid:work_id>/clock-out/', views_work.clock_out_view, name='clock_out'),
     path('work/<uuid:work_id>/', views_work.work_detail_view, name='work_detail'),

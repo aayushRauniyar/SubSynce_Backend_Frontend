@@ -9,7 +9,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Prefetch, Q, Sum
+from django.db.models import Count, Min, Prefetch, Q, Sum
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.utils.timesince import timesince
@@ -21,7 +21,7 @@ from schedule.model.cleaningschedule import ServiceSchedule
 from work.model.workcomplete import CompleteWork, WorkCompleteImage
 from invoice.model.invoicemanagement import ClientInvoice, ContractorInvoice
 from ops import services
-from ops.access import STAFF_ROLES, forbidden, is_contractor, is_staff_user
+from ops.access import STAFF_ROLES, contractor_required, forbidden, is_contractor, is_staff_user
 from ops.forms import MANAGEABLE_ROLES, clean_evidence_photos, ClientCreateForm, ClientForm, ScheduleForm, ScheduleStatusForm, SiteForm, SubcontractorForm, UserForm
 
 
@@ -990,3 +990,34 @@ def portal_check_out_view(request):
             WorkCompleteImage.objects.create(work_completion=work, evidence_photo=image)
     messages.success(request, f'Work at {work.schedule.site.name} submitted as completed.')
     return redirect('ops:dashboard')
+
+
+@contractor_required
+def my_sites_view(request):
+    """Read-only list of the contractor's own assigned sites (ContractorDashboard `sites`)."""
+    upcoming = Q(
+        service_schedules__status='SCHEDULED',
+        service_schedules__scheduled_date__gte=timezone.localdate(),
+        service_schedules__deleted_at__isnull=True,
+    )
+    sites = _with_images(
+        Site.objects.filter(assigned_contractor=request.user).order_by('name').annotate(
+            upcoming_count=Count('service_schedules', filter=upcoming),
+            next_service=Min('service_schedules__scheduled_date', filter=upcoming),
+        )
+    )
+    return render(request, 'ops/contractor/my_sites.html', {'sites': sites})
+
+
+@contractor_required
+def my_earnings_view(request):
+    """The contractor's earnings: same figures as ContractorDashboard `earnings`, plus the approved invoices behind them."""
+    approved = (
+        ContractorInvoice.objects.filter(created_by=request.user, status='APPROVED')
+        .select_related('site').order_by('-invoice_date', '-created_at')
+    )
+    context = {
+        'earnings': services.contractor_dashboard(request.user)['earnings'],
+        'invoices': approved,
+    }
+    return render(request, 'ops/contractor/my_earnings.html', context)

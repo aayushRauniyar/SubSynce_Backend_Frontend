@@ -1,9 +1,9 @@
 {# Top-right account menu (trigger + dropdown card), shared by every top bar. Opened/closed by the script in base.html. #}
 {# Optional: `display_name` / `role_label` override the defaults (the contractor portal passes them). #}
-{% with item='flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm transition-colors' off='text-ink-light/50 cursor-not-allowed' %}
+{% with item='ui-menu-item flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm transition-colors' off='text-ink-light/50 cursor-not-allowed' %}
 <div class="relative min-w-0" data-account-menu>
     <button type="button" data-account-trigger aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"
-            class="flex items-center gap-2 min-w-0 pl-1 pr-1 py-1 rounded-xl hover:bg-surface-container transition-colors">
+            class="ui-account-trigger flex items-center gap-2 min-w-0 pl-1 pr-1 py-1 rounded-xl hover:bg-surface-container transition-colors">
         <span class="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
             <span class="material-symbols-outlined text-primary" style="font-size: 18px;" aria-hidden="true">person</span>
         </span>
@@ -15,7 +15,7 @@
     </button>
 
     <div data-account-panel role="menu" aria-label="Account"
-         class="hidden absolute right-0 top-full mt-2 z-40 w-72 max-w-[calc(100vw-2rem)] rounded-2xl bg-card border border-surface-container-high shadow-lg p-2">
+         class="ui-menu hidden absolute right-0 top-full mt-2 z-40 w-72 max-w-[calc(100vw-2rem)] rounded-2xl bg-card border border-surface-container-high shadow-lg p-2">
         <!-- Who is signed in -->
         <div class="flex items-center gap-3 px-3 py-3">
             <span class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
@@ -34,9 +34,9 @@
             <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">account_circle</span>My Profile
         </span>
         {% if user.role == 'CONTRACTOR' %}
-        <span class="{{ item }} {{ off }}" role="menuitem" aria-disabled="true" title="Assigned sites page isn't available yet">
+        <a href="{% url 'ops:my_sites' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink" role="menuitem">
             <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">location_on</span>My Assigned Sites
-        </span>
+        </a>
         <span class="{{ item }} {{ off }}" role="menuitem" aria-disabled="true" title="Account settings aren't available yet">
             <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">manage_accounts</span>Account Settings
         </span>
