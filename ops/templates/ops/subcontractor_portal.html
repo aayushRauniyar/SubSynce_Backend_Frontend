@@ -86,28 +86,15 @@
                     </section>
 
                     <div class="w-full xl:w-[340px] shrink-0 flex flex-col gap-4">
-                        <!-- Quick Actions: session versions of the work API's clock-in / clock-out -->
+                        <!-- Quick Actions: session version of the work API's clock-out (records completion) -->
                         <section class="card p-5" aria-labelledby="actions-heading">
                             <h2 id="actions-heading" class="ui-section-title mb-4">Quick Actions</h2>
-                            {% with action='flex items-start gap-3 text-left rounded-lg p-1.5 -m-1.5 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors' icon='ui-card-icon bg-primary/10 text-primary' %}
-                            <div class="grid grid-cols-2 gap-x-4 gap-y-5">
-                                <button type="button" class="{{ action }}" onclick="openWorkModal('checkin-modal')"
-                                        {% if not check_in_jobs %}disabled title="No scheduled jobs to check in to today"{% endif %}>
-                                    <span class="{{ icon }}"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">login</span></span>
-                                    <span><span class="block text-sm font-medium text-ink">Check In</span><span class="block text-xs text-ink-light">Start your work</span></span>
-                                </button>
-                                <button type="button" class="{{ action }}" onclick="openWorkModal('checkout-modal', 'Check Out')"
-                                        {% if not active_work %}disabled title="No work in progress"{% endif %}>
-                                    <span class="{{ icon }}"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">logout</span></span>
-                                    <span><span class="block text-sm font-medium text-ink">Check Out</span><span class="block text-xs text-ink-light">End your work</span></span>
-                                </button>
-                                <button type="button" class="{{ action }} col-span-2" onclick="openWorkModal('checkout-modal', 'Submit Completion')"
-                                        {% if not active_work %}disabled title="No work in progress"{% endif %}>
-                                    <span class="{{ icon }}"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">task</span></span>
-                                    <span><span class="block text-sm font-medium text-ink">Submit Completion</span><span class="block text-xs text-ink-light">Submit work for review</span></span>
-                                </button>
-                            </div>
-                            {% endwith %}
+                            <button type="button" onclick="openWorkModal()"
+                                    class="flex w-full items-center gap-3 text-left rounded-lg p-1.5 -m-1.5 hover:bg-primary/10 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent transition-colors"
+                                    {% if not active_work %}disabled title="No work in progress"{% endif %}>
+                                <span class="ui-card-icon bg-primary/10 text-primary"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">task</span></span>
+                                <span><span class="block text-sm font-medium text-ink">Submit Completion</span><span class="block text-xs text-ink-light">Submit work for review</span></span>
+                            </button>
                         </section>
 
                         <!-- Alerts: no notification backend exists yet -->
@@ -125,33 +112,12 @@
     </div>
 </div>
 
-<!-- Check In modal -->
 {% with label='ui-label' box='bg-card border border-surface-container-high rounded-2xl w-full max-w-[480px] max-h-[90vh] overflow-y-auto p-6' %}
-<div id="checkin-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeWorkModals();">
-    <div class="{{ box }}" role="dialog" aria-modal="true" aria-labelledby="checkin-title">
-        <div class="flex items-center justify-between mb-5">
-            <h2 id="checkin-title" class="text-lg font-semibold text-ink">Check In</h2>
-            <button type="button" onclick="closeWorkModals()" class="ui-btn ui-btn-icon text-ink-light hover:bg-surface-container" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
-        </div>
-        <form method="post" action="{% url 'ops:portal_check_in' %}">
-            {% csrf_token %}
-            <label class="{{ label }}" for="checkin-schedule">Today's job *</label>
-            <select name="schedule" id="checkin-schedule" required class="field-input">
-                {% for s in check_in_jobs %}<option value="{{ s.id }}">{{ s.scheduled_time|time:"g:i A" }} · {{ s.site.name }}</option>{% endfor %}
-            </select>
-            <div class="flex items-center justify-end gap-3 mt-6">
-                <button type="button" onclick="closeWorkModals()" class="ui-btn ui-btn-secondary">Cancel</button>
-                <button type="submit" class="ui-btn ui-btn-primary">Check In</button>
-            </div>
-        </form>
-    </div>
-</div>
-
-<!-- Check Out / Submit Completion modal (the backend records both in one clock-out) -->
+<!-- Submit Completion modal (the backend records check-out and completion in one clock-out) -->
 <div id="checkout-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeWorkModals();">
     <div class="{{ box }}" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
         <div class="flex items-center justify-between mb-5">
-            <h2 id="checkout-title" class="text-lg font-semibold text-ink">Check Out</h2>
+            <h2 id="checkout-title" class="text-lg font-semibold text-ink">Submit Completion</h2>
             <button type="button" onclick="closeWorkModals()" class="ui-btn ui-btn-icon text-ink-light hover:bg-surface-container" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
         </div>
         <form method="post" action="{% url 'ops:portal_check_out' %}" enctype="multipart/form-data" class="space-y-4">
@@ -184,18 +150,16 @@
 
 {% block extra_js %}
 <script>
-    function openWorkModal(id, title) {
-        if (title) document.getElementById('checkout-title').textContent = title;
-        const modal = document.getElementById(id);
+    function openWorkModal() {
+        const modal = document.getElementById('checkout-modal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
     }
 
     function closeWorkModals() {
-        document.querySelectorAll('#checkin-modal, #checkout-modal').forEach(function (modal) {
-            modal.classList.remove('flex');
-            modal.classList.add('hidden');
-        });
+        const modal = document.getElementById('checkout-modal');
+        modal.classList.remove('flex');
+        modal.classList.add('hidden');
     }
 
     document.addEventListener('keydown', function (event) {

@@ -83,20 +83,7 @@
                                     <td class="pl-6 pr-2 py-3">
                                         <input type="checkbox" class="row-checkbox w-4 h-4 rounded accent-primary">
                                     </td>
-                                    <td class="px-3 py-3">
-                                        <div class="flex items-center gap-2.5">
-                                            {% if client.photo %}
-                                            <img src="{{ client.photo.url }}" alt=""
-                                                 class="w-8 h-8 rounded-full object-cover shrink-0">
-                                            {% else %}
-                                            <div class="w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0
-                                                {% cycle 'bg-primary/10 text-primary' 'bg-success/10 text-success' 'bg-warning/10 text-warning' 'bg-error/10 text-error' as avatar_color %}">
-                                                {{ client.first_name|default:""|first|upper }}{{ client.last_name|default:""|first|upper }}
-                                            </div>
-                                            {% endif %}
-                                            <span class="font-medium text-ink">{{ client.first_name }} {{ client.last_name }}</span>
-                                        </div>
-                                    </td>
+                                    <td class="px-3 py-3 font-medium text-ink">{{ client.first_name }} {{ client.last_name }}</td>
                                     <td class="px-3 py-3 text-ink-light">{{ client.phone|default:"—" }}</td>
                                     <td class="px-3 py-3 text-ink-light">{{ client.email|default:"—" }}</td>
                                     <td class="px-3 py-3 text-ink-light">{{ client.sites.count }}</td>

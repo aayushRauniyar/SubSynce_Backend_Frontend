@@ -75,10 +75,6 @@
                 <span class="material-symbols-outlined" aria-hidden="true">settings</span><span>Settings</span>
             </span>
             {% endif %}
-            <!-- No Help page exists yet -->
-            <span class="{{ item }} text-ink-light/50 cursor-not-allowed" title="Help isn't available yet">
-                <span class="material-symbols-outlined" aria-hidden="true">help</span><span>Help</span>
-            </span>
             <a href="{% url 'ops:logout' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink">
                 <span class="material-symbols-outlined" aria-hidden="true">logout</span><span>Logout</span>
             </a>
