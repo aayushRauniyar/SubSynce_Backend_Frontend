@@ -15,7 +15,7 @@
         .toolbar button { background: #222221; color: #fff; border-color: #222221; }
         .sheet { width: 210mm; min-height: 297mm; margin: 0 auto 24px; background: #fff; padding: 18mm 16mm; box-shadow: 0 4px 24px rgb(0 0 0 / 0.08); }
         header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-        header img { height: 40px; }
+        header img { height: 40px; max-width: 200px; object-fit: contain; }
         h1 { margin: 0; font-size: 28px; letter-spacing: 0.02em; text-align: right; }
         .muted { color: #5C5952; }
         .meta { margin-top: 6px; text-align: right; line-height: 1.6; }
@@ -46,7 +46,7 @@
     <main class="sheet">
         <header>
             <div>
-                <img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync">
+                {% if company.logo %}<img src="{{ company.logo.url }}" alt="{{ company.name }} logo">{% else %}<img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync">{% endif %}
                 <div class="muted" style="margin-top: 10px; line-height: 1.6;">
                     {{ company.name }}{% if company.abn %}<br>ABN {{ company.abn }}{% endif %}
                     {% if company.address %}<br>{{ company.address }}{% endif %}

@@ -68,3 +68,29 @@ class CompanyLogoTests(TestCase):
         self.assertFalse(form.is_valid())
         self.assertIn("2MB", " ".join(form.errors["logo"]))
         self.assertFalse(CompanyProfile.load().logo)
+
+
+@override_settings(MEDIA_ROOT=MEDIA)
+class InvoiceLogoTests(TestCase):
+    def test_printed_invoice_uses_uploaded_logo(self):
+        from datetime import date
+
+        from invoice.model.invoicemanagement import ContractorInvoice
+        from ops.tests.helpers import make_site
+
+        owner = make_user("OWNER")
+        contractor = make_user("CONTRACTOR")
+        site = make_site(contractor=contractor)
+        inv = ContractorInvoice.objects.create(
+            invoice_number="INV-LOGO-1", site=site, invoice_date=date.today(),
+            service_period_start=date.today(), service_period_end=date.today(),
+            amount=100, created_by=contractor,
+        )
+        print_url = reverse("ops:invoice_print", args=[inv.pk])
+        login(self.client, owner)
+        self.assertContains(self.client.get(print_url), "images/subsync-logo.svg")
+
+        self.client.post(reverse("ops:company_settings"), {**DETAILS, "logo": png()})
+        resp = self.client.get(print_url)
+        self.assertContains(resp, CompanyProfile.load().logo.url)
+        self.assertNotContains(resp, "images/subsync-logo.svg")
