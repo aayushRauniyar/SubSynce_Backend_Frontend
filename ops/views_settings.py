@@ -16,6 +16,6 @@ def company_settings_view(request):
         profile = form.save()
         if old_logo and old_logo != profile.logo.name:
             profile.logo.storage.delete(old_logo)
-        messages.success(request, "Company settings saved.")
+        messages.success(request, "Company info saved.")
         return redirect("ops:company_settings")
     return render(request, "ops/settings/company.html", {"form": form, "profile": CompanyProfile.load()})

@@ -62,22 +62,16 @@
         <div class="my-3 border-t border-dashed border-surface-container-high"></div>
 
         <div class="space-y-1">
-            <a href="{% url 'ops:users' %}" class="{{ item }} {% nav_class 'users' %}">
-                <span class="material-symbols-outlined" aria-hidden="true">group</span><span>Users</span>
-            </a>
             {% if user.role == 'OWNER' %}
             <a href="{% url 'ops:company_settings' %}" class="{{ item }} {% nav_class 'company_settings' %}">
-                <span class="material-symbols-outlined" aria-hidden="true">settings</span><span>Settings</span>
+                <span class="material-symbols-outlined" aria-hidden="true">business</span><span>Company Info</span>
             </a>
             {% else %}
-            <!-- Company settings are Owner-only -->
-            <span class="{{ item }} text-ink-light/50 cursor-not-allowed" title="Company settings are available to the Owner">
-                <span class="material-symbols-outlined" aria-hidden="true">settings</span><span>Settings</span>
+            <!-- Company info is Owner-only -->
+            <span class="{{ item }} text-ink-light/50 cursor-not-allowed" title="Company info is available to the Owner">
+                <span class="material-symbols-outlined" aria-hidden="true">business</span><span>Company Info</span>
             </span>
             {% endif %}
-            <a href="{% url 'ops:logout' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink">
-                <span class="material-symbols-outlined" aria-hidden="true">logout</span><span>Logout</span>
-            </a>
         </div>
         {% endif %}
     </nav>
