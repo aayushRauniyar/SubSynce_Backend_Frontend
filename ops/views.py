@@ -476,7 +476,9 @@ def sites_view(request):
     client_filter = request.GET.get('client', '').strip()
     frequency = request.GET.get('frequency', '').strip()
 
-    sites = _with_images(Site.objects.select_related('client_id', 'assigned_contractor').order_by('name'))
+    sites = _with_images(
+        Site.objects.select_related('client_id', 'assigned_contractor__user_detail').order_by('name')
+    )
     if query:
         sites = sites.filter(
             Q(name__icontains=query)
@@ -494,6 +496,8 @@ def sites_view(request):
 
     paginator = Paginator(sites, 8)
     page_obj = paginator.get_page(request.GET.get('page'))
+    for site in page_obj:
+        site.contractor_name = _full_name(site.assigned_contractor) if site.assigned_contractor else None
     filters = {k: v for k, v in {'q': query, 'client': client_filter, 'frequency': frequency}.items() if v}
 
     context = {
@@ -507,6 +511,28 @@ def sites_view(request):
         **_site_form_context(),
     }
     return render(request, 'ops/sites.html', context)
+
+
+@login_required
+def site_detail_view(request, pk):
+    """One site's full details and photo gallery - Administrator only."""
+    if not _is_admin(request):
+        messages.error(request, 'Only administrators can access site management.')
+        return redirect('ops:dashboard')
+
+    site = get_object_or_404(
+        _with_images(Site.objects.select_related('client_id', 'assigned_contractor__user_detail')), id=pk
+    )
+    today = timezone.localdate()
+    context = {
+        'user': request.user,
+        'site': site,
+        'contractor_name': _full_name(site.assigned_contractor) if site.assigned_contractor else None,
+        'next_service': site.service_schedules.filter(scheduled_date__gte=today, status='SCHEDULED')
+            .order_by('scheduled_date', 'scheduled_time').first(),
+        **_site_form_context(),
+    }
+    return render(request, 'ops/site_detail.html', context)
 
 
 def _with_images(sites):

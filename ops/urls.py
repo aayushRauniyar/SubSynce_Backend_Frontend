@@ -23,6 +23,7 @@ urlpatterns = [
     # Sites (protected - Administrator only)
     path('sites/', views.sites_view, name='sites'),
     path('sites/add/', views.site_create_view, name='site_create'),
+    path('sites/<uuid:pk>/', views.site_detail_view, name='site_detail'),
     path('sites/<uuid:pk>/edit/', views.site_update_view, name='site_update'),
     path('sites/<uuid:pk>/delete/', views.site_delete_view, name='site_delete'),
 
