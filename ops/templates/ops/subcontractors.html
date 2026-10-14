@@ -37,23 +37,23 @@
                 </form>
 
                 <!-- Subcontractors Table -->
-                <div class="bg-white rounded-2xl border border-surface-container overflow-hidden">
+                <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[720px] text-sm">
-                            <thead>
-                                <tr class="bg-primary text-on-primary text-left">
-                                    <th class="px-6 py-3.5 font-semibold">Name</th>
-                                    <th class="px-6 py-3.5 font-semibold">Email / Username</th>
-                                    <th class="px-6 py-3.5 font-semibold">Phone</th>
-                                    <th class="px-6 py-3.5 font-semibold">Assigned Sites</th>
-                                    <th class="px-6 py-3.5 font-semibold text-right">Actions</th>
+                            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                                <tr>
+                                    <th class="px-5 py-3">Subcontractor</th>
+                                    <th class="px-5 py-3">Email / Username</th>
+                                    <th class="px-5 py-3">Phone</th>
+                                    <th class="px-5 py-3">Assigned Sites</th>
+                                    <th class="px-5 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-surface-container">
                                 {% for contractor in page_obj %}
                                 {% with detail=contractor.user_detail %}
-                                <tr class="border-b border-surface-container last:border-0 hover:bg-surface/60">
-                                    <td class="px-6 py-4">
+                                <tr class="hover:bg-surface/60">
+                                    <td class="px-5 py-3">
                                         <div class="flex items-center gap-3">
                                             <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0
                                                 {% cycle 'bg-primary/10 text-primary' 'bg-success/10 text-success' 'bg-warning/10 text-warning' 'bg-error/10 text-error' as avatar_color %}">
@@ -64,13 +64,13 @@
                                             </a>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-5 py-3">
                                         <div class="text-ink">{{ contractor.email|default:"—" }}</div>
                                         <div class="text-xs text-ink-light">@{{ contractor.username }}</div>
                                     </td>
-                                    <td class="px-6 py-4 text-ink-light">{{ detail.phone|default:"—" }}</td>
-                                    <td class="px-6 py-4 text-ink-light">{{ contractor.site_count }}</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-5 py-3 text-ink-light">{{ detail.phone|default:"—" }}</td>
+                                    <td class="px-5 py-3 text-ink-light">{{ contractor.site_count }}</td>
+                                    <td class="px-5 py-3">
                                         <div class="flex items-center justify-end gap-2">
                                             <button type="button" title="Edit" onclick="openEditModal(this.dataset)"
                                                     data-action="{% url 'ops:subcontractor_update' contractor.id %}"
@@ -85,7 +85,7 @@
                                 {% endwith %}
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center text-ink-light">
+                                    <td colspan="5" class="px-5 py-12 text-center text-ink-light">
                                         {% if query %}No subcontractors match "{{ query }}".{% else %}No subcontractor accounts yet.{% endif %}
                                     </td>
                                 </tr>

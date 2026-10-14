@@ -62,32 +62,32 @@
                 </form>
 
                 <!-- Clients Table -->
-                <div class="bg-white rounded-2xl border border-surface-container overflow-hidden">
+                <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[720px] text-sm">
-                            <thead>
-                                <tr class="bg-primary text-on-primary text-left">
-                                    <th class="pl-6 pr-2 py-3 w-10">
-                                        <input type="checkbox" id="select-all" class="w-4 h-4 rounded accent-white">
+                            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                                <tr>
+                                    <th class="pl-5 pr-2 py-3 w-10">
+                                        <input type="checkbox" id="select-all" class="w-4 h-4 rounded accent-primary" aria-label="Select all clients">
                                     </th>
-                                    <th class="px-3 py-3 font-semibold text-xs tracking-wide uppercase">Client Name</th>
-                                    <th class="px-3 py-3 font-semibold text-xs tracking-wide uppercase">Phone</th>
-                                    <th class="px-3 py-3 font-semibold text-xs tracking-wide uppercase">Email</th>
-                                    <th class="px-3 py-3 font-semibold text-xs tracking-wide uppercase">Sites</th>
-                                    <th class="px-3 py-3 font-semibold text-xs tracking-wide uppercase text-right pr-6">Actions</th>
+                                    <th class="px-5 py-3">Client</th>
+                                    <th class="px-5 py-3">Phone</th>
+                                    <th class="px-5 py-3">Email</th>
+                                    <th class="px-5 py-3">Assigned Sites</th>
+                                    <th class="px-5 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-surface-container">
                                 {% for client in page_obj %}
-                                <tr class="border-b border-surface-container last:border-0 hover:bg-surface/60">
-                                    <td class="pl-6 pr-2 py-3">
+                                <tr class="hover:bg-surface/60">
+                                    <td class="pl-5 pr-2 py-3">
                                         <input type="checkbox" class="row-checkbox w-4 h-4 rounded accent-primary">
                                     </td>
-                                    <td class="px-3 py-3 font-medium text-ink"><a href="{% url 'ops:client_detail' client.id %}" class="hover:text-primary hover:underline">{{ client.first_name }} {{ client.last_name|default:'' }}</a></td>
-                                    <td class="px-3 py-3 text-ink-light">{{ client.phone|default:"—" }}</td>
-                                    <td class="px-3 py-3 text-ink-light">{{ client.email|default:"—" }}</td>
-                                    <td class="px-3 py-3 text-ink-light">{{ client.sites.count }}</td>
-                                    <td class="px-3 py-3 pr-6">
+                                    <td class="px-5 py-3 font-medium text-ink"><a href="{% url 'ops:client_detail' client.id %}" class="hover:text-primary hover:underline">{{ client.first_name }} {{ client.last_name|default:'' }}</a></td>
+                                    <td class="px-5 py-3 text-ink-light">{{ client.phone|default:"—" }}</td>
+                                    <td class="px-5 py-3 text-ink-light">{{ client.email|default:"—" }}</td>
+                                    <td class="px-5 py-3 text-ink-light">{{ client.sites.count }}</td>
+                                    <td class="px-5 py-3">
                                         <div class="flex items-center justify-end gap-1.5">
                                             <button type="button"
                                                     title="Edit"
@@ -108,7 +108,7 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="px-6 py-12 text-center text-ink-light">
+                                    <td colspan="6" class="px-5 py-12 text-center text-ink-light">
                                         {% if query %}No clients match "{{ query }}".{% else %}No clients yet. Add your first client to get started.{% endif %}
                                     </td>
                                 </tr>
