@@ -349,6 +349,40 @@ def subcontractors_view(request):
 
 
 @login_required
+def subcontractor_detail_view(request, pk):
+    """One subcontractor's profile, sites, upcoming services, recent work and invoices - Administrator only."""
+    if not _is_admin(request):
+        messages.error(request, 'Only administrators can access subcontractor management.')
+        return redirect('ops:dashboard')
+
+    contractor = get_object_or_404(
+        User.objects.select_related('user_detail'), id=pk, role='CONTRACTOR', deleted_at__isnull=True
+    )
+    today = timezone.localdate()
+    invoices = ContractorInvoice.objects.filter(created_by=contractor)
+    context = {
+        'user': request.user,
+        'contractor': contractor,
+        'full_name': _full_name(contractor),
+        'phone': getattr(getattr(contractor, 'user_detail', None), 'phone', None),
+        'sites': contractor.contractors.select_related('client_id').order_by('name'),
+        'upcoming': ServiceSchedule.objects.filter(
+            site__assigned_contractor=contractor, status='SCHEDULED', scheduled_date__gte=today
+        ).select_related('site').order_by('scheduled_date', 'scheduled_time')[:10],
+        'recent_work': contractor.work_completions.select_related('schedule__site')
+            .order_by('-check_in_time')[:10],
+        'completed_count': contractor.work_completions.filter(status='COMPLETED').count(),
+        'invoice_counts': {
+            'pending': invoices.filter(status='PENDING').count(),
+            'approved': invoices.filter(status='APPROVED').count(),
+            'rejected': invoices.filter(status='REJECTED').count(),
+        },
+        'approved_total': invoices.filter(status='APPROVED').aggregate(total=Sum('amount'))['total'] or Decimal('0.00'),
+    }
+    return render(request, 'ops/subcontractor_detail.html', context)
+
+
+@login_required
 def client_detail_view(request, pk):
     """Client details page with the client's own sites - Administrator only."""
     if not _is_admin(request):
@@ -688,6 +722,36 @@ def schedules_view(request):
         'sites': sites,
     }
     return render(request, 'ops/schedules.html', context)
+
+
+@login_required
+def schedule_detail_view(request, pk):
+    """One scheduled service: site, client, subcontractor, timing, notes and its work record - Administrator only."""
+    if not _is_admin(request):
+        messages.error(request, 'Only administrators can access schedules.')
+        return redirect('ops:dashboard')
+
+    schedule = get_object_or_404(
+        ServiceSchedule.objects.select_related(
+            'site__client_id', 'site__assigned_contractor__user_detail', 'created_by'
+        ),
+        id=pk,
+    )
+    contractor = schedule.site.assigned_contractor
+    work = (
+        CompleteWork.objects.filter(schedule=schedule)
+        .select_related('completed_by').prefetch_related('work_completion_images').first()
+    )
+    context = {
+        'user': request.user,
+        's': schedule,
+        'contractor': contractor,
+        'contractor_name': _full_name(contractor) if contractor else None,
+        'work': work,
+        'duration': (work.check_out_time - work.check_in_time)
+            if work and work.check_in_time and work.check_out_time else None,
+    }
+    return render(request, 'ops/schedule_detail.html', context)
 
 
 def _save_schedule(request, instance=None):

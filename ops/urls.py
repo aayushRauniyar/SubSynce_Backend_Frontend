@@ -30,6 +30,7 @@ urlpatterns = [
     # Schedules (protected - Administrator only)
     path('schedules/', views.schedules_view, name='schedules'),
     path('schedules/add/', views.schedule_create_view, name='schedule_create'),
+    path('schedules/<uuid:pk>/', views.schedule_detail_view, name='schedule_detail'),
     path('schedules/<uuid:pk>/edit/', views.schedule_update_view, name='schedule_update'),
     path('schedules/<uuid:pk>/status/', views.schedule_status_view, name='schedule_status'),
     path('schedules/<uuid:pk>/delete/', views.schedule_delete_view, name='schedule_delete'),
@@ -42,6 +43,7 @@ urlpatterns = [
 
     # Subcontractors (protected - Administrator only, read-only)
     path('subcontractors/', views.subcontractors_view, name='subcontractors'),
+    path('subcontractors/<uuid:pk>/', views.subcontractor_detail_view, name='subcontractor_detail'),
     path('subcontractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
 
     # Password reset (Django's built-in views and tokens)

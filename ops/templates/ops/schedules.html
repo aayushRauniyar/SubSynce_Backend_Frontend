@@ -82,7 +82,7 @@
                             <tbody>
                                 {% for s in page_obj %}
                                 <tr class="border-b border-[#E9E9E9]">
-                                    <td class="px-6 py-5 font-medium break-words">{{ s.site.name }}</td>
+                                    <td class="px-6 py-5 font-medium break-words"><a href="{% url 'ops:schedule_detail' s.id %}" class="hover:text-[#F27E22] hover:underline">{{ s.site.name }}</a></td>
                                     <td class="px-6 py-5 text-[#494949] break-words">{{ s.site.client_id.first_name }} {{ s.site.client_id.last_name|default:'' }}</td>
                                     <td class="px-6 py-5 text-[#494949] break-words">{{ s.contractor_name|default:'—' }}</td>
                                     <td class="px-6 py-5 text-[#494949] whitespace-nowrap">{{ s.scheduled_date|date:"D d M Y" }}</td>
