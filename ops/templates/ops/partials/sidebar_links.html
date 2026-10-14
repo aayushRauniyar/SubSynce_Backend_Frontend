@@ -5,10 +5,10 @@
     <a href="{% url 'ops:dashboard' %}" class="{{ item }} {% nav_class 'dashboard' %}">
         <span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span>
     </a>
-    <a href="{% url 'ops:my_sites' %}" class="{{ item }} {% nav_class 'my_sites' %}">
+    <a href="{% url 'ops:my_sites' %}" class="{{ item }} {% nav_class 'my_sites' 'my_site_detail' %}">
         <span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Sites</span>
     </a>
-    <a href="{% url 'ops:my_jobs' %}" class="{{ item }} {% nav_class 'my_jobs' 'my_calendar' 'clock_out' 'work_detail' %}">
+    <a href="{% url 'ops:my_jobs' %}" class="{{ item }} {% nav_class 'my_jobs' 'my_job_detail' 'my_calendar' 'clock_out' 'work_detail' %}">
         <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Services</span>
     </a>
     <a href="{% url 'ops:invoices' %}" class="{{ item }} {% nav_class 'invoices' 'invoice_detail' 'invoice_create' 'invoice_edit' %}">

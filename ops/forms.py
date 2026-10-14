@@ -121,7 +121,7 @@ class OpsPasswordResetForm(PasswordResetForm):
 class ScheduleForm(forms.ModelForm):
     """
     Same rules as the admin Schedule API: the site needs an assigned contractor,
-    new schedules start as SCHEDULED. Client/subcontractor come from the site.
+    new schedules start as SCHEDULED. Client/contractor come from the site.
     Status changes go through ScheduleStatusForm.
     """
 
@@ -214,7 +214,7 @@ class UserForm(forms.ModelForm):
 
 
 class SubcontractorForm(UserForm):
-    """Edit a contractor from the Subcontractors page: UserForm plus the UserDetail phone; role stays CONTRACTOR."""
+    """Edit a contractor from the Contractors page: UserForm plus the UserDetail phone; role stays CONTRACTOR."""
 
     phone = forms.CharField(max_length=255, required=False)
 

@@ -9,7 +9,7 @@
 </a>
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
     <div class="flex flex-wrap items-center gap-3">
-        <h1 class="text-2xl font-bold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
+        <h1 class="text-2xl font-semibold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
         <span class="pill pill-{{ invoice.status|lower }}">{{ invoice.status|label }}</span>
     </div>
     <div class="flex flex-wrap gap-2">

@@ -91,7 +91,7 @@ html.dark .bg-white {
 
 /* ---------------------------------------------------------------------------
  * Dark mode for the SubSync page designs (Clients, Sites, Schedules, Users,
- * Subcontractors, Dashboard, portal…). Those templates use the Figma hex
+ * Contractors, Dashboard, portal…). Those templates use the Figma hex
  * colours as Tailwind arbitrary values, which don't follow the theme. In dark
  * mode only, map each one onto the palette tokens the Calendar uses, so light
  * mode stays exactly as designed and no page needs its own dark styles.
@@ -139,7 +139,7 @@ html.dark .bg-\[\#EEEAFD\], html.dark .bg-\[\#ECEAFD\] { background-color: rgb(v
 html.dark .bg-\[\#FFF6DB\] { background-color: rgb(var(--c-warning) / 0.14); }
 html.dark .bg-\[\#FF383C\]\/5, html.dark .hover\:bg-\[\#EF4444\]\/5:hover { background-color: rgb(var(--c-error) / 0.10); }
 
-/* Clients / Subcontractors use an orange table header in light mode; dark mode gets the standard dark header. */
+/* Clients / Contractors use an orange table header in light mode; dark mode gets the standard dark header. */
 html.dark thead tr.bg-primary { background-color: rgb(var(--c-surface-c)); color: rgb(var(--c-ink-light)); }
 
 :focus-visible {
@@ -211,10 +211,10 @@ input[type="checkbox"] {
 }
 .pill-scheduled, .pill-issued { background: rgb(var(--c-scheduled) / 0.12); color: rgb(var(--c-scheduled)); }
 .pill-in_progress, .pill-pending { background: rgb(var(--c-warning) / 0.12); color: rgb(var(--c-warning)); }
-.pill-completed, .pill-approved, .pill-paid { background: rgb(var(--c-success) / 0.12); color: rgb(var(--c-success)); }
+.pill-completed, .pill-approved, .pill-paid, .pill-active { background: rgb(var(--c-success) / 0.12); color: rgb(var(--c-success)); }
 .pill-missed { background: rgb(var(--c-missed) / 0.14); color: rgb(var(--c-missed)); }
 .pill-rejected, .pill-overdue, .pill-flagged { background: rgb(var(--c-error) / 0.09); color: rgb(var(--c-error)); }
-.pill-cancelled { background: rgb(var(--c-surface-high)); color: rgb(var(--c-ink-light)); }
+.pill-cancelled, .pill-inactive { background: rgb(var(--c-surface-high)); color: rgb(var(--c-ink-light)); }
 
 /* Calendar chips: no dot, so the site name gets the room */
 .pill.chip { display: flex; min-width: 0; }
@@ -241,8 +241,6 @@ html.dark [data-ui="contractor"] {
 @media (min-width: 768px)  { [data-ui="contractor"] { --ui-gutter: 32px; } }
 @media (min-width: 1280px) { [data-ui="contractor"] { --ui-gutter: 48px; } }
 @media (min-width: 1536px) { [data-ui="contractor"] { --ui-gutter: 56px; } }
-
-body[data-ui="contractor"] { font-family: 'Poppins', system-ui, sans-serif; }
 
 /* Page container and header */
 [data-ui="contractor"] .ui-page { width: 100%; max-width: 1600px; margin: 0 auto; padding: 24px var(--ui-gutter) 48px; }
@@ -331,6 +329,12 @@ html.dark [data-ui="contractor"] .ui-card-link:hover { box-shadow: 0 4px 14px rg
 [data-ui="contractor"] .ui-empty { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 40px 20px; text-align: center; font-size: 14px; color: rgb(var(--c-ink-light)); }
 [data-ui="contractor"] .ui-empty .material-symbols-outlined { font-size: 32px; color: rgb(var(--c-outline)); }
 [data-ui="contractor"] .ui-empty.ui-empty-sm { padding: 24px 16px; }
+
+/* Every role: the sidebar's logo block and the top bar share one fixed 64px height, so their
+   bottom borders line up. Without this each sized itself from its padding and contents
+   (logo block 77px, top bar about 70px) and the two lines sat at different heights. */
+.ui-sidebar-brand { height: 64px; padding-top: 0; padding-bottom: 0; box-sizing: content-box; } /* + 1px border, same as the header */
+.ui-topbar-inner { height: 64px; padding-top: 0; padding-bottom: 0; }
 
 /* Sidebar: 256px, 32px inner gutter, 40px rows, pale orange active item */
 [data-ui="contractor"] .ui-sidebar-brand { height: 64px; padding: 0 32px; }

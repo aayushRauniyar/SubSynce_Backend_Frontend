@@ -5,7 +5,7 @@
 
 {% block page %}
 <div class="mb-5">
-    <h1 class="text-2xl font-bold text-ink">Work Completions</h1>
+    <h1 class="text-2xl font-semibold text-ink">Work Completions</h1>
     <p class="text-ink-light text-sm mt-1">Every work record submitted by contractors.</p>
 </div>
 
@@ -38,7 +38,7 @@
     <div class="overflow-x-auto">
         <table class="w-full min-w-[760px] text-sm">
             <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
-                <tr><th class="px-5 py-3">Site</th><th class="px-5 py-3">Subcontractor</th><th class="px-5 py-3">Scheduled</th><th class="px-5 py-3">Check-in</th><th class="px-5 py-3">Check-out</th><th class="px-5 py-3">Status</th><th class="px-5 py-3 text-right">Actions</th></tr>
+                <tr><th class="px-5 py-3">Site</th><th class="px-5 py-3">Contractor</th><th class="px-5 py-3">Scheduled</th><th class="px-5 py-3">Check-in</th><th class="px-5 py-3">Check-out</th><th class="px-5 py-3">Status</th><th class="px-5 py-3 text-right">Actions</th></tr>
             </thead>
             <tbody class="divide-y divide-surface-container">
                 {% for work in page_obj %}

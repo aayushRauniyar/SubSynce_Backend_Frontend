@@ -1,7 +1,9 @@
+import csv
 import uuid
 from datetime import timedelta
 from decimal import Decimal
 
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -46,7 +48,7 @@ def _full_name(user):
 
 def _build_contractor_portal_context(request):
     """
-    Context for the Subcontractor Portal - mirrors the filtering rules already
+    Context for the Contractor Portal - mirrors the filtering rules already
     enforced server-side in schedule/work/invoice's user_views.py (same
     site__assigned_contractor / completed_by / created_by scoping), just
     computed directly via the ORM for this session-authenticated page instead
@@ -69,6 +71,7 @@ def _build_contractor_portal_context(request):
             'time': schedule.scheduled_time,
             'date': schedule.scheduled_date,
             'is_today': schedule.scheduled_date == today,
+            'id': schedule.id,
             'site_name': schedule.site.name,
             'site_address': schedule.site.address,
             'service_info': schedule.site.cleaning_frequency,
@@ -149,7 +152,7 @@ def dashboard_view(request):
     """
     Dashboard view - shows overview of the system.
 
-    Branches by role: CONTRACTOR users get the Subcontractor Portal; staff
+    Branches by role: CONTRACTOR users get the Contractor Portal; staff
     (ADMINISTRATOR, OWNER) get the admin dashboard; anyone else gets a 403.
     Staff figures come from the ORM (same patterns as the dashboard API), plus
     the shared services.admin_summary, which ?start=YYYY-MM-DD&end=YYYY-MM-DD narrows.
@@ -270,20 +273,13 @@ def _is_admin(request):
     return request.user.is_authenticated and request.user.role in STAFF_ROLES
 
 
-@login_required
-def clients_view(request):
-    """
-    Clients list page - Administrator only.
-
-    Supports search (?q=) across name/phone/email and pagination (?page=).
-    """
-    if not _is_admin(request):
-        messages.error(request, 'Only administrators can access client management.')
-        return redirect('ops:dashboard')
-
+def _filtered_clients(request):
+    """Clients matching ?q= (name/phone/email) and ?status= (a real Client status); shared by the list and its CSV export."""
     query = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip().upper()
+    if status not in dict(Client.STATUS_CHOICES):
+        status = ''
     clients = Client.objects.all().prefetch_related('sites', 'assigned_sites').order_by('-created_at')
-
     if query:
         clients = clients.filter(
             Q(first_name__icontains=query)
@@ -291,14 +287,51 @@ def clients_view(request):
             | Q(email__icontains=query)
             | Q(phone__icontains=query)
         )
+    if status:
+        clients = clients.filter(status=status)
+    return clients, query, status
+
+
+def _clients_csv(clients):
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="clients_{timezone.localdate():%Y-%m-%d}.csv"'
+    response.write('\ufeff')  # UTF-8 byte order mark so Excel reads non-ASCII names correctly
+    writer = csv.writer(response)
+    writer.writerow(['Client', 'Phone', 'Email', 'Assigned Sites', 'Status'])
+    for c in clients:
+        writer.writerow([f"{c.first_name} {c.last_name or ''}".strip(), c.phone or '', c.email or '',
+                         c.sites.count(), c.get_status_display()])
+    return response
+
+
+@login_required
+def clients_view(request):
+    """
+    Clients list page - Administrator only.
+
+    Supports search (?q=) across name/phone/email, a status filter (?status=ACTIVE|INACTIVE),
+    pagination (?page=), and ?format=csv to download the filtered list.
+    """
+    if not _is_admin(request):
+        messages.error(request, 'Only administrators can access client management.')
+        return redirect('ops:dashboard')
+
+    clients, query, status = _filtered_clients(request)
+    if request.GET.get('format') == 'csv':
+        return _clients_csv(clients)
 
     paginator = Paginator(clients, 8)
     page_obj = paginator.get_page(request.GET.get('page'))
+    filters = {k: v for k, v in {'q': query, 'status': status}.items() if v}
 
     context = {
         'user': request.user,
         'page_obj': page_obj,
         'query': query,
+        'status': status,
+        'status_choices': Client.STATUS_CHOICES,
+        'filter_qs': urlencode(filters),
+        'export_qs': urlencode({**filters, 'format': 'csv'}),
         'total_clients': paginator.count,
         'client_form': ClientForm(),  # site + status options for the Edit Client modal
     }
@@ -308,14 +341,14 @@ def clients_view(request):
 @login_required
 def subcontractors_view(request):
     """
-    Subcontractors list page - Administrator only.
+    Contractors list page - Administrator only.
 
-    Read-only: the backend has no edit/delete endpoint for contractor
-    accounts (only create, via authuser's ContractorRegisterView, and list).
+    Edit opens a modal (subcontractor_update_view); Delete reuses user_delete_view,
+    which refuses while the contractor still has linked records.
     Supports search (?q=) across name/username/email/phone and pagination.
     """
     if not _is_admin(request):
-        messages.error(request, 'Only administrators can access subcontractor management.')
+        messages.error(request, 'Only administrators can access contractor management.')
         return redirect('ops:dashboard')
 
     query = request.GET.get('q', '').strip()
@@ -344,15 +377,16 @@ def subcontractors_view(request):
         'query': query,
         'total_contractors': paginator.count,
         'edit_state': request.session.pop('subcontractor_form_state', None),  # set by a failed edit
+        'add_state': request.session.pop('user_form_state', None),  # set by a failed Add Contractor (user_create)
     }
     return render(request, 'ops/subcontractors.html', context)
 
 
 @login_required
 def subcontractor_detail_view(request, pk):
-    """One subcontractor's profile, sites, upcoming services, recent work and invoices - Administrator only."""
+    """One contractor's profile, sites, upcoming services, recent work and invoices - Administrator only."""
     if not _is_admin(request):
-        messages.error(request, 'Only administrators can access subcontractor management.')
+        messages.error(request, 'Only administrators can access contractor management.')
         return redirect('ops:dashboard')
 
     contractor = get_object_or_404(
@@ -650,7 +684,7 @@ def schedules_view(request):
     """
     Schedules list page - Administrator only.
 
-    Search (?q=) across site/client/subcontractor names, filters by site (?site=),
+    Search (?q=) across site/client/contractor names, filters by site (?site=),
     status (?status=) and period (?period=, defaults to this week), pagination (?page=).
     """
     if not _is_admin(request):
@@ -702,7 +736,7 @@ def schedules_view(request):
         contractor = schedule.site.assigned_contractor
         schedule.contractor_name = _full_name(contractor) if contractor else ''
 
-    # Site options for the modal, with the client/subcontractor shown as read-only context.
+    # Site options for the modal, with the client/contractor shown as read-only context.
     sites = list(ScheduleForm().fields['site'].queryset)
     for site in sites:
         site.contractor_name = _full_name(site.assigned_contractor) if site.assigned_contractor else ''
@@ -726,7 +760,7 @@ def schedules_view(request):
 
 @login_required
 def schedule_detail_view(request, pk):
-    """One scheduled service: site, client, subcontractor, timing, notes and its work record - Administrator only."""
+    """One scheduled service: site, client, contractor, timing, notes and its work record - Administrator only."""
     if not _is_admin(request):
         messages.error(request, 'Only administrators can access schedules.')
         return redirect('ops:dashboard')
@@ -967,18 +1001,18 @@ def user_update_view(request, pk):
 @login_required
 @require_POST
 def subcontractor_update_view(request, pk):
-    """Edit a contractor's name, username, email and phone from the Subcontractors page."""
+    """Edit a contractor's name, username, email and phone from the Contractors page."""
     if not _is_admin(request):
-        messages.error(request, 'Only administrators can manage subcontractors.')
+        messages.error(request, 'Only administrators can manage contractors.')
         return redirect('ops:dashboard')
     target = _managed_user_or_none(request, pk)
     if target and target.role != 'CONTRACTOR':
-        messages.error(request, 'Only subcontractor accounts can be edited here.')
+        messages.error(request, 'Only contractor accounts can be edited here.')
     elif target:
         form = SubcontractorForm(request.POST, instance=target, actor=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Subcontractor updated successfully.')
+            messages.success(request, 'Contractor updated successfully.')
         else:
             request.session['subcontractor_form_state'] = {
                 'modal': {
@@ -987,7 +1021,7 @@ def subcontractor_update_view(request, pk):
                 },
                 'errors': _form_errors(form),
             }
-            messages.error(request, 'Could not update subcontractor. Please fix the errors shown in the form.')
+            messages.error(request, 'Could not update contractor. Please fix the errors shown in the form.')
     return _redirect_back(request, 'ops:subcontractors')
 
 
@@ -1036,3 +1070,49 @@ def my_sites_view(request):
         )
     )
     return render(request, 'ops/contractor/my_sites.html', {'sites': sites})
+
+
+@contractor_required
+def my_site_detail_view(request, pk):
+    """One of the contractor's own sites: details, photos, upcoming services and their past work there.
+
+    Sites assigned to someone else 404, so contractors can't read other contractors' sites.
+    The site price (what the client is charged) is left out on purpose.
+    """
+    site = get_object_or_404(
+        _with_images(Site.objects.select_related('client_id')), id=pk, assigned_contractor=request.user
+    )
+    today = timezone.localdate()
+    context = {
+        'site': site,
+        'upcoming': site.service_schedules.filter(status='SCHEDULED', scheduled_date__gte=today)
+            .order_by('scheduled_date', 'scheduled_time')[:10],
+        'my_work': CompleteWork.objects.filter(schedule__site=site, completed_by=request.user)
+            .select_related('schedule').order_by('-check_in_time')[:10],
+    }
+    return render(request, 'ops/contractor/site_detail.html', context)
+
+
+@contractor_required
+def my_job_detail_view(request, pk):
+    """One scheduled service on the contractor's own site: when, where, what to do, and their work record."""
+    job = get_object_or_404(
+        ServiceSchedule.objects.select_related('site__client_id'),
+        id=pk, site__assigned_contractor=request.user,
+    )
+    work = (
+        CompleteWork.objects.filter(schedule=job, completed_by=request.user)
+        .prefetch_related('work_completion_images').first()
+    )
+    site = _with_images(Site.objects.filter(pk=job.site_id)).first()
+    today = timezone.localdate()
+    context = {
+        'job': job,
+        'site': site,
+        'work': work,
+        'status': services.job_status(job),
+        'overdue': job.status == 'SCHEDULED' and not work and job.scheduled_date < today,
+        'duration': (work.check_out_time - work.check_in_time)
+            if work and work.check_in_time and work.check_out_time else None,
+    }
+    return render(request, 'ops/contractor/job_detail.html', context)

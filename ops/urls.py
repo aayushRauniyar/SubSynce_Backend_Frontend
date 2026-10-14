@@ -41,10 +41,10 @@ urlpatterns = [
     path('users/<uuid:pk>/edit/', views.user_update_view, name='user_update'),
     path('users/<uuid:pk>/delete/', views.user_delete_view, name='user_delete'),
 
-    # Subcontractors (protected - Administrator only, read-only)
-    path('subcontractors/', views.subcontractors_view, name='subcontractors'),
-    path('subcontractors/<uuid:pk>/', views.subcontractor_detail_view, name='subcontractor_detail'),
-    path('subcontractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
+    # Contractors (Administrator and Owner): list, detail, edit; delete uses user_delete
+    path('contractors/', views.subcontractors_view, name='subcontractors'),
+    path('contractors/<uuid:pk>/', views.subcontractor_detail_view, name='subcontractor_detail'),
+    path('contractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
 
     # Password reset (Django's built-in views and tokens)
     path('forgot-password/', auth_views.PasswordResetView.as_view(
@@ -68,6 +68,8 @@ urlpatterns = [
     # Work completion (contractor jobs, staff log)
     path('jobs/', views_work.my_jobs_view, name='my_jobs'),
     path('my-sites/', views.my_sites_view, name='my_sites'),
+    path('my-sites/<uuid:pk>/', views.my_site_detail_view, name='my_site_detail'),
+    path('jobs/<uuid:pk>/', views.my_job_detail_view, name='my_job_detail'),
     path('work/<uuid:work_id>/', views_work.work_detail_view, name='work_detail'),
     path('completions/', views_work.completions_view, name='completions'),
     path('completions/<uuid:work_id>/', views_work.work_detail_view, name='completion_detail'),

@@ -21,12 +21,8 @@
         })();
     </script>
     
-    <!-- Pretendard Font -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
-    
-    <!-- Poppins (shared sidebar and the SubSync page designs) -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Poppins: the one app font (Tailwind's font-sans below), as in the SubSync designs. Loaded once, here. -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Material Symbols Icons -->
     <!-- Material Symbols Icons: one fixed style (not the multi-MB variable font), and
@@ -74,7 +70,7 @@
                     transitionDuration: { DEFAULT: '300ms' },
                     transitionTimingFunction: { DEFAULT: 'cubic-bezier(0, 0, 0.2, 1)' },
                     fontFamily: {
-                        sans: ['Pretendard Variable', 'Pretendard', 'system-ui', 'sans-serif'],
+                        sans: ['Poppins', 'system-ui', 'sans-serif'],
                     },
                 }
             }
@@ -82,8 +78,7 @@
     </script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=contractor-v2">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=palette-v4">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=merge-v2">
     
     {% block extra_head %}{% endblock %}
 </head>

@@ -9,7 +9,7 @@
         </span>
         <span class="hidden md:flex flex-col items-start leading-tight min-w-0">
             <span class="text-sm font-semibold text-ink truncate max-w-[180px]">{% if display_name %}{{ display_name }}{% elif user.user_detail.first_name %}{{ user.user_detail.first_name }} {{ user.user_detail.last_name|default:'' }}{% else %}{{ user.username }}{% endif %}</span>
-            <span class="text-xs text-ink-light">{% if role_label %}{{ role_label }}{% elif user.role == 'CONTRACTOR' %}Subcontractor{% else %}{{ user.role|title }}{% endif %}</span>
+            <span class="text-xs text-ink-light">{% if role_label %}{{ role_label }}{% elif user.role == 'CONTRACTOR' %}Contractor{% else %}{{ user.role|title }}{% endif %}</span>
         </span>
         <span class="material-symbols-outlined text-ink-light hidden md:block" style="font-size: 18px;" aria-hidden="true">expand_more</span>
     </button>
@@ -24,7 +24,7 @@
             <div class="min-w-0">
                 <p class="text-sm font-semibold text-ink truncate">{% if display_name %}{{ display_name }}{% elif user.user_detail.first_name %}{{ user.user_detail.first_name }} {{ user.user_detail.last_name|default:'' }}{% else %}{{ user.username }}{% endif %}</p>
                 {% if user.email %}<p class="text-xs text-ink-light truncate">{{ user.email }}</p>{% endif %}
-                <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-medium {% if user.role == 'CONTRACTOR' %}bg-scheduled/10 text-scheduled{% else %}bg-primary/10 text-primary{% endif %}">{% if role_label %}{{ role_label }}{% elif user.role == 'CONTRACTOR' %}Subcontractor{% else %}{{ user.role|title }}{% endif %}</span>
+                <span class="inline-block mt-1 px-2 py-0.5 rounded-md text-[11px] font-medium {% if user.role == 'CONTRACTOR' %}bg-scheduled/10 text-scheduled{% else %}bg-primary/10 text-primary{% endif %}">{% if role_label %}{{ role_label }}{% elif user.role == 'CONTRACTOR' %}Contractor{% else %}{{ user.role|title }}{% endif %}</span>
             </div>
         </div>
         <div class="my-1 border-t border-surface-container-high"></div>

@@ -18,7 +18,7 @@
                 <!-- Page Header -->
                 <div class="flex flex-wrap items-start justify-between gap-3 mb-6">
                     <div>
-                        <h1 class="text-2xl font-bold text-ink">Dashboard</h1>
+                        <h1 class="text-2xl font-semibold text-ink">Dashboard</h1>
                         <p class="text-ink-light text-sm mt-1">{{ today|date:"jS F Y" }}</p>
                     </div>
                     <!-- Staff create client invoices (contractor invoices are created by contractors) -->
@@ -68,10 +68,10 @@
                         </div>
                     {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}</a>{% else %}</div>{% endif %}
 
-                    <!-- Subcontractors -->
-                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:subcontractors' %}" aria-label="View subcontractors" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
+                    <!-- Contractors -->
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:subcontractors' %}" aria-label="View contractors" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-ink-light">Subcontractors</p>
+                            <p class="text-sm font-medium text-ink-light">Contractors</p>
                             <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                 <span class="material-symbols-outlined text-primary" style="font-size: 20px;">engineering</span>
                             </div>
@@ -108,7 +108,7 @@
                                  style="background: conic-gradient(#F4842B {{ jobs_this_week.progress_pct }}%, var(--ring-track) 0);">
                                 <div class="absolute inset-[3px] rounded-full bg-white flex flex-col items-center justify-center">
                                     <span class="text-[10px] font-semibold text-ink leading-none">{{ jobs_this_week.completed }}/{{ jobs_this_week.scheduled }}</span>
-                                    <span class="text-[7px] text-ink-light leading-none mt-0.5">Total</span>
+                                    <span class="text-[10px] text-ink-light leading-none mt-0.5">Total</span>
                                 </div>
                             </div>
                         </div>

@@ -22,7 +22,7 @@
             {% for job in to_do %}
             <li class="flex items-center justify-between gap-3 py-3">
                 <div class="min-w-0">
-                    <p class="text-sm font-medium text-ink truncate">{{ job.site.name }}</p>
+                    <a href="{% url 'ops:my_job_detail' job.id %}" class="block text-sm font-medium text-ink truncate hover:text-primary hover:underline">{{ job.site.name }}</a>
                     <p class="text-xs {% if job.scheduled_date < today %}text-error{% else %}text-ink-light{% endif %}">
                         {{ job.scheduled_date|date:"D j M" }} · {{ job.scheduled_time|time:"g:i A" }}{% if job.scheduled_date < today %} · overdue{% endif %}
                     </p>
@@ -42,7 +42,7 @@
         <ul class="divide-y divide-surface-container">
             {% for job in upcoming %}
             <li class="py-3">
-                <p class="text-sm font-medium text-ink">{{ job.site.name }}</p>
+                <a href="{% url 'ops:my_job_detail' job.id %}" class="text-sm font-medium text-ink hover:text-primary hover:underline">{{ job.site.name }}</a>
                 <p class="text-xs text-ink-light">{{ job.scheduled_date|date:"D j M" }} · {{ job.scheduled_time|time:"g:i A" }} · {{ job.site.address }}</p>
             </li>
             {% endfor %}

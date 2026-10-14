@@ -3,13 +3,9 @@
 
 {% block title %}{{ s.site.name }} · {{ s.scheduled_date|date:"j M Y" }} - SubSync{% endblock %}
 
-{% block extra_head %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
 {% with card='bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.05)] p-6' muted='text-[#494949]/60' %}
-<div class="flex h-screen overflow-hidden font-['Poppins']">
+<div class="flex h-screen overflow-hidden">
     {% include 'ops/partials/_sidebar.html' with active='schedules' %}
 
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -34,14 +30,14 @@
                 <!-- Service details -->
                 <section class="{{ card }}" aria-labelledby="details-heading">
                     <h2 id="details-heading" class="text-base font-semibold text-[#222222] mb-5">Service Details</h2>
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-5 text-[13px]">
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-10 gap-y-5 text-sm">
                         <div><dt class="text-[#888]">Date</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.scheduled_date|date:"l j M Y" }}</dd></div>
                         <div><dt class="text-[#888]">Time</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.scheduled_time|time:"g:i A" }}</dd></div>
                         <div><dt class="text-[#888]">Frequency</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.site.cleaning_frequency|lower|capfirst }}</dd></div>
                         <div><dt class="text-[#888]">Site</dt><dd class="mt-1 font-medium"><a href="{% url 'ops:site_detail' s.site_id %}" class="text-[#222222] hover:text-[#F27E22] hover:underline">{{ s.site.name }}</a></dd></div>
                         <div><dt class="text-[#888]">Address</dt><dd class="mt-1 font-medium text-[#222222] break-words">{{ s.site.address }}</dd></div>
                         <div><dt class="text-[#888]">Client</dt><dd class="mt-1 font-medium"><a href="{% url 'ops:client_detail' s.site.client_id_id %}" class="text-[#222222] hover:text-[#F27E22] hover:underline">{{ s.site.client_id.first_name }} {{ s.site.client_id.last_name|default:'' }}</a></dd></div>
-                        <div><dt class="text-[#888]">Subcontractor</dt><dd class="mt-1 font-medium">{% if contractor %}<a href="{% url 'ops:subcontractor_detail' contractor.id %}" class="text-[#222222] hover:text-[#F27E22] hover:underline">{{ contractor_name }}</a>{% else %}<span class="font-normal {{ muted }}">Not assigned</span>{% endif %}</dd></div>
+                        <div><dt class="text-[#888]">Contractor</dt><dd class="mt-1 font-medium">{% if contractor %}<a href="{% url 'ops:subcontractor_detail' contractor.id %}" class="text-[#222222] hover:text-[#F27E22] hover:underline">{{ contractor_name }}</a>{% else %}<span class="font-normal {{ muted }}">Not assigned</span>{% endif %}</dd></div>
                         <div><dt class="text-[#888]">Price per service</dt><dd class="mt-1 font-medium text-[#222222] tabular-nums">{{ s.site.price|money }}</dd></div>
                         <div><dt class="text-[#888]">Created</dt><dd class="mt-1 font-medium text-[#222222]">{{ s.created_at|date:"j M Y" }} by {{ s.created_by.username }}</dd></div>
                         <div class="sm:col-span-2 lg:col-span-3"><dt class="text-[#888]">Notes</dt><dd class="mt-1 text-[#222222] whitespace-pre-line break-words">{{ s.notes|default:"No notes." }}</dd></div>
@@ -56,7 +52,7 @@
                         {% if work %}<a href="{% url 'ops:completion_detail' work.id %}" class="text-sm font-medium text-[#F27E22] hover:underline">Open full record</a>{% endif %}
                     </div>
                     {% if work %}
-                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-5 text-[13px]">
+                    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-10 gap-y-5 text-sm">
                         <div><dt class="text-[#888]">Status</dt><dd class="mt-1"><span class="pill pill-{{ work.status|lower }}">{{ work.status|label }}</span></dd></div>
                         <div><dt class="text-[#888]">Check-in</dt><dd class="mt-1 font-medium text-[#222222]">{{ work.check_in_time|date:"j M, g:i A"|default:"—" }}</dd></div>
                         <div><dt class="text-[#888]">Check-out</dt><dd class="mt-1 font-medium text-[#222222]">{{ work.check_out_time|date:"j M, g:i A"|default:"—" }}</dd></div>

@@ -6,7 +6,7 @@
 {% block page %}
 <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-5">
     <div>
-        <h1 class="text-2xl font-bold text-ink">Client Invoices</h1>
+        <h1 class="text-2xl font-semibold text-ink">Client Invoices</h1>
         <p class="text-ink-light text-sm mt-1">Invoices the company sends to clients. Paid invoices count as revenue.</p>
     </div>
     <a href="{% url 'ops:client_invoice_create' %}" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors">
