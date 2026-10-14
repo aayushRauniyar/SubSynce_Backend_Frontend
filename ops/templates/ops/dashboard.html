@@ -68,10 +68,10 @@
                         </div>
                     {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}</a>{% else %}</div>{% endif %}
 
-                    <!-- Subcontractors -->
-                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:subcontractors' %}" aria-label="View subcontractors" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
+                    <!-- Contractors -->
+                    {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:subcontractors' %}" aria-label="View contractors" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
                         <div class="flex items-center justify-between">
-                            <p class="text-sm font-medium text-ink-light">Subcontractors</p>
+                            <p class="text-sm font-medium text-ink-light">Contractors</p>
                             <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                 <span class="material-symbols-outlined text-primary" style="font-size: 20px;">engineering</span>
                             </div>

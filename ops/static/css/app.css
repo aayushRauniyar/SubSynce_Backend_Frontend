@@ -91,7 +91,7 @@ html.dark .bg-white {
 
 /* ---------------------------------------------------------------------------
  * Dark mode for the SubSync page designs (Clients, Sites, Schedules, Users,
- * Subcontractors, Dashboard, portal…). Those templates use the Figma hex
+ * Contractors, Dashboard, portal…). Those templates use the Figma hex
  * colours as Tailwind arbitrary values, which don't follow the theme. In dark
  * mode only, map each one onto the palette tokens the Calendar uses, so light
  * mode stays exactly as designed and no page needs its own dark styles.
@@ -139,7 +139,7 @@ html.dark .bg-\[\#EEEAFD\], html.dark .bg-\[\#ECEAFD\] { background-color: rgb(v
 html.dark .bg-\[\#FFF6DB\] { background-color: rgb(var(--c-warning) / 0.14); }
 html.dark .bg-\[\#FF383C\]\/5, html.dark .hover\:bg-\[\#EF4444\]\/5:hover { background-color: rgb(var(--c-error) / 0.10); }
 
-/* Clients / Subcontractors use an orange table header in light mode; dark mode gets the standard dark header. */
+/* Clients / Contractors use an orange table header in light mode; dark mode gets the standard dark header. */
 html.dark thead tr.bg-primary { background-color: rgb(var(--c-surface-c)); color: rgb(var(--c-ink-light)); }
 
 :focus-visible {

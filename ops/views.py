@@ -46,7 +46,7 @@ def _full_name(user):
 
 def _build_contractor_portal_context(request):
     """
-    Context for the Subcontractor Portal - mirrors the filtering rules already
+    Context for the Contractor Portal - mirrors the filtering rules already
     enforced server-side in schedule/work/invoice's user_views.py (same
     site__assigned_contractor / completed_by / created_by scoping), just
     computed directly via the ORM for this session-authenticated page instead
@@ -149,7 +149,7 @@ def dashboard_view(request):
     """
     Dashboard view - shows overview of the system.
 
-    Branches by role: CONTRACTOR users get the Subcontractor Portal; staff
+    Branches by role: CONTRACTOR users get the Contractor Portal; staff
     (ADMINISTRATOR, OWNER) get the admin dashboard; anyone else gets a 403.
     Staff figures come from the ORM (same patterns as the dashboard API), plus
     the shared services.admin_summary, which ?start=YYYY-MM-DD&end=YYYY-MM-DD narrows.
@@ -308,14 +308,14 @@ def clients_view(request):
 @login_required
 def subcontractors_view(request):
     """
-    Subcontractors list page - Administrator only.
+    Contractors list page - Administrator only.
 
-    Read-only: the backend has no edit/delete endpoint for contractor
-    accounts (only create, via authuser's ContractorRegisterView, and list).
+    Edit opens a modal (subcontractor_update_view); Delete reuses user_delete_view,
+    which refuses while the contractor still has linked records.
     Supports search (?q=) across name/username/email/phone and pagination.
     """
     if not _is_admin(request):
-        messages.error(request, 'Only administrators can access subcontractor management.')
+        messages.error(request, 'Only administrators can access contractor management.')
         return redirect('ops:dashboard')
 
     query = request.GET.get('q', '').strip()
@@ -344,15 +344,16 @@ def subcontractors_view(request):
         'query': query,
         'total_contractors': paginator.count,
         'edit_state': request.session.pop('subcontractor_form_state', None),  # set by a failed edit
+        'add_state': request.session.pop('user_form_state', None),  # set by a failed Add Contractor (user_create)
     }
     return render(request, 'ops/subcontractors.html', context)
 
 
 @login_required
 def subcontractor_detail_view(request, pk):
-    """One subcontractor's profile, sites, upcoming services, recent work and invoices - Administrator only."""
+    """One contractor's profile, sites, upcoming services, recent work and invoices - Administrator only."""
     if not _is_admin(request):
-        messages.error(request, 'Only administrators can access subcontractor management.')
+        messages.error(request, 'Only administrators can access contractor management.')
         return redirect('ops:dashboard')
 
     contractor = get_object_or_404(
@@ -650,7 +651,7 @@ def schedules_view(request):
     """
     Schedules list page - Administrator only.
 
-    Search (?q=) across site/client/subcontractor names, filters by site (?site=),
+    Search (?q=) across site/client/contractor names, filters by site (?site=),
     status (?status=) and period (?period=, defaults to this week), pagination (?page=).
     """
     if not _is_admin(request):
@@ -702,7 +703,7 @@ def schedules_view(request):
         contractor = schedule.site.assigned_contractor
         schedule.contractor_name = _full_name(contractor) if contractor else ''
 
-    # Site options for the modal, with the client/subcontractor shown as read-only context.
+    # Site options for the modal, with the client/contractor shown as read-only context.
     sites = list(ScheduleForm().fields['site'].queryset)
     for site in sites:
         site.contractor_name = _full_name(site.assigned_contractor) if site.assigned_contractor else ''
@@ -726,7 +727,7 @@ def schedules_view(request):
 
 @login_required
 def schedule_detail_view(request, pk):
-    """One scheduled service: site, client, subcontractor, timing, notes and its work record - Administrator only."""
+    """One scheduled service: site, client, contractor, timing, notes and its work record - Administrator only."""
     if not _is_admin(request):
         messages.error(request, 'Only administrators can access schedules.')
         return redirect('ops:dashboard')
@@ -967,18 +968,18 @@ def user_update_view(request, pk):
 @login_required
 @require_POST
 def subcontractor_update_view(request, pk):
-    """Edit a contractor's name, username, email and phone from the Subcontractors page."""
+    """Edit a contractor's name, username, email and phone from the Contractors page."""
     if not _is_admin(request):
-        messages.error(request, 'Only administrators can manage subcontractors.')
+        messages.error(request, 'Only administrators can manage contractors.')
         return redirect('ops:dashboard')
     target = _managed_user_or_none(request, pk)
     if target and target.role != 'CONTRACTOR':
-        messages.error(request, 'Only subcontractor accounts can be edited here.')
+        messages.error(request, 'Only contractor accounts can be edited here.')
     elif target:
         form = SubcontractorForm(request.POST, instance=target, actor=request.user)
         if form.is_valid():
             form.save()
-            messages.success(request, 'Subcontractor updated successfully.')
+            messages.success(request, 'Contractor updated successfully.')
         else:
             request.session['subcontractor_form_state'] = {
                 'modal': {
@@ -987,7 +988,7 @@ def subcontractor_update_view(request, pk):
                 },
                 'errors': _form_errors(form),
             }
-            messages.error(request, 'Could not update subcontractor. Please fix the errors shown in the form.')
+            messages.error(request, 'Could not update contractor. Please fix the errors shown in the form.')
     return _redirect_back(request, 'ops:subcontractors')
 
 

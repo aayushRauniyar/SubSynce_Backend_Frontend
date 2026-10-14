@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Subcontractor Portal - SubSync{% endblock %}
+{% block title %}Contractor Portal - SubSync{% endblock %}
 
 {% block content %}
 <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:px-3 focus:py-2 focus:rounded-lg focus:bg-card">Skip to content</a>
@@ -9,13 +9,13 @@
 
     <!-- Main Content -->
     <div class="flex-1 flex flex-col overflow-hidden">
-        {% include 'ops/partials/_topbar.html' with display_name=full_name role_label='Subcontractor' %}
+        {% include 'ops/partials/_topbar.html' with display_name=full_name role_label='Contractor' %}
 
         <main id="main" class="flex-1 overflow-y-auto bg-surface">
             <div class="ui-page">
                 <div class="ui-page-header">
                     <div>
-                        <h1 class="ui-title">Subcontractor Portal</h1>
+                        <h1 class="ui-title">Contractor Portal</h1>
                         <p class="ui-subtitle">Welcome back, {{ full_name }}. Here's your overview for today.</p>
                     </div>
                 </div>

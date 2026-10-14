@@ -68,7 +68,7 @@ class DashboardTests(TestCase):
     def test_contractor_gets_own_dashboard(self):
         login(self.client, self.alex)
         resp = self.client.get(reverse("ops:dashboard"))
-        # Contractors get the approved Subcontractor Portal (with Check In / Check Out).
+        # Contractors get the approved Contractor Portal.
         self.assertTemplateUsed(resp, "ops/subcontractor_portal.html")
         # Same structure as the ContractorDashboard API (sites / services / invoices / earnings).
         d = resp.context["dashboard"]

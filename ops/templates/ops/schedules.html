@@ -33,7 +33,7 @@
                 <form method="get" class="flex flex-col xl:flex-row xl:items-center justify-between gap-4 mb-10">
                     <div class="relative w-full xl:w-1/2 min-w-0">
                         <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#494949]" style="font-size: 18px;">search</span>
-                        <input type="text" name="q" value="{{ query }}" placeholder="Search by site, client or subcontractor..."
+                        <input type="text" name="q" value="{{ query }}" placeholder="Search by site, client or contractor..."
                                class="w-full h-11 pl-11 pr-4 rounded-md bg-white border border-[#E2E2E2] text-xs text-[#222222] placeholder:text-[#494949]/60 focus:outline-none focus:ring-2 focus:ring-[#F27E22]/30 focus:border-[#F27E22]">
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 xl:flex xl:items-center gap-4 shrink-0">
@@ -72,7 +72,7 @@
                                 <tr>
                                     <th class="px-6 py-3.5 font-medium">Name</th>
                                     <th class="px-6 py-3.5 font-medium">Client</th>
-                                    <th class="px-6 py-3.5 font-medium">Subcontractor</th>
+                                    <th class="px-6 py-3.5 font-medium">Contractor</th>
                                     <th class="px-6 py-3.5 font-medium">Date</th>
                                     <th class="px-6 py-3.5 font-medium">Time</th>
                                     <th class="px-6 py-3.5 font-medium">Status</th>
@@ -195,12 +195,12 @@
                     <!-- Read-only context derived from the site -->
                     <dl id="site-summary" class="hidden mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3 rounded-xl bg-[#FAF2E8] px-4 py-3 text-xs">
                         <div><dt class="text-ink-light">Client</dt><dd id="summary-client" class="font-medium text-ink"></dd></div>
-                        <div><dt class="text-ink-light">Assigned Subcontractor</dt><dd id="summary-contractor" class="font-medium text-ink"></dd></div>
+                        <div><dt class="text-ink-light">Assigned Contractor</dt><dd id="summary-contractor" class="font-medium text-ink"></dd></div>
                         <div><dt class="text-ink-light">Address</dt><dd id="summary-address" class="text-ink break-words"></dd></div>
                     </dl>
                     <p id="site-warning" class="hidden mt-2 flex items-center gap-1.5 text-xs text-error">
                         <span class="material-symbols-outlined" style="font-size: 16px;">warning</span>
-                        This site has no assigned subcontractor. Assign one on the Sites page before scheduling.
+                        This site has no assigned contractor. Assign one on the Sites page before scheduling.
                     </p>
                 </div>
                 <div>
@@ -275,7 +275,7 @@
 
     function closeScheduleModal() { toggleModal('schedule-modal', false); }
 
-    // Client/subcontractor are derived from the site; block saving when the site has no subcontractor.
+    // Client/contractor are derived from the site; block saving when the site has no contractor.
     function showSiteSummary() {
         const option = document.getElementById('schedule-site').selectedOptions[0];
         const picked = option && option.value;

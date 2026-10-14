@@ -81,3 +81,63 @@ class ScheduleDetailTests(TestCase):
     def test_unknown_schedule_404(self):
         login(self.client, self.admin)
         self.assertEqual(self.client.get(reverse("ops:schedule_detail", args=[uuid.uuid4()])).status_code, 404)
+
+
+class ContractorDeleteAndNamingTests(TestCase):
+    def setUp(self):
+        self.admin = make_user("ADMINISTRATOR")
+        login(self.client, self.admin)
+
+    def test_list_and_detail_offer_delete(self):
+        bob = make_user("CONTRACTOR", username="bob")
+        delete_url = reverse("ops:user_delete", args=[bob.pk])
+        self.assertContains(self.client.get(reverse("ops:subcontractors")), delete_url)
+        self.assertContains(self.client.get(reverse("ops:subcontractor_detail", args=[bob.pk])), delete_url)
+
+    def test_delete_without_linked_records_removes_and_blocks_login(self):
+        from authuser.model.user import User
+        bob = make_user("CONTRACTOR", username="bob")
+        resp = self.client.post(reverse("ops:user_delete", args=[bob.pk]), {"next": reverse("ops:subcontractors")})
+        self.assertRedirects(resp, reverse("ops:subcontractors"), fetch_redirect_response=False)
+        self.assertFalse(User.objects.filter(pk=bob.pk, deleted_at__isnull=True).exists())
+        self.assertNotContains(self.client.get(reverse("ops:subcontractors")), "@bob")
+
+    def test_delete_refused_while_contractor_has_sites(self):
+        from authuser.model.user import User
+        alex = make_user("CONTRACTOR", username="alex")
+        make_site(contractor=alex)
+        resp = self.client.post(reverse("ops:user_delete", args=[alex.pk]), {"next": reverse("ops:subcontractors")}, follow=True)
+        self.assertContains(resp, "Can&#x27;t delete alex")
+        self.assertTrue(User.objects.filter(pk=alex.pk, deleted_at__isnull=True).exists())
+
+    def test_pages_say_contractor_not_subcontractor(self):
+        alex = make_user("CONTRACTOR", username="alex")
+        site = make_site(contractor=alex)
+        sched = make_schedule(site, self.admin)
+        for url in (reverse("ops:subcontractors"), reverse("ops:subcontractor_detail", args=[alex.pk]),
+                    reverse("ops:schedules") + "?period=all", reverse("ops:schedule_detail", args=[sched.pk]),
+                    reverse("ops:dashboard"), reverse("ops:completions")):
+            self.assertNotIn("subcontractor", self.client.get(url).content.decode().lower().replace("ops:subcontractor", ""), url)
+        self.client.logout()
+        login(self.client, alex)
+        self.assertNotContains(self.client.get(reverse("ops:dashboard")), "Subcontractor")
+
+    def test_add_contractor_from_contractors_page(self):
+        from authuser.model.user import User
+        page = reverse("ops:subcontractors")
+        self.assertContains(self.client.get(page), "Add Contractor")
+        data = {"first_name": "Nat", "last_name": "R", "username": "natr", "email": "nat@example.com",
+                "role": "CONTRACTOR", "password1": "Strong#Pass123", "password2": "Strong#Pass123", "next": page}
+        resp = self.client.post(reverse("ops:user_create"), data)
+        self.assertRedirects(resp, page, fetch_redirect_response=False)
+        self.assertEqual(User.objects.get(username="natr").role, "CONTRACTOR")
+        self.assertContains(self.client.get(page), "@natr")
+
+    def test_failed_add_reopens_form_with_errors_on_contractors_page(self):
+        page = reverse("ops:subcontractors")
+        data = {"first_name": "Nat", "username": "natr", "email": "nat@example.com", "role": "CONTRACTOR",
+                "password1": "Strong#Pass123", "password2": "Different#1", "next": page}
+        self.client.post(reverse("ops:user_create"), data)
+        resp = self.client.get(page)
+        self.assertContains(resp, "Passwords do not match.")
+        self.assertContains(resp, '"username": "natr"')

@@ -41,10 +41,10 @@ urlpatterns = [
     path('users/<uuid:pk>/edit/', views.user_update_view, name='user_update'),
     path('users/<uuid:pk>/delete/', views.user_delete_view, name='user_delete'),
 
-    # Subcontractors (protected - Administrator only, read-only)
-    path('subcontractors/', views.subcontractors_view, name='subcontractors'),
-    path('subcontractors/<uuid:pk>/', views.subcontractor_detail_view, name='subcontractor_detail'),
-    path('subcontractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
+    # Contractors (Administrator and Owner): list, detail, edit; delete uses user_delete
+    path('contractors/', views.subcontractors_view, name='subcontractors'),
+    path('contractors/<uuid:pk>/', views.subcontractor_detail_view, name='subcontractor_detail'),
+    path('contractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
 
     # Password reset (Django's built-in views and tokens)
     path('forgot-password/', auth_views.PasswordResetView.as_view(
