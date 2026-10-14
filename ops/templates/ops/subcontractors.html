@@ -37,47 +37,41 @@
                 </form>
 
                 <!-- Subcontractors Table -->
-                <div class="bg-white rounded-2xl border border-surface-container overflow-hidden">
+                <div class="card overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full min-w-[720px] text-sm">
-                            <thead>
-                                <tr class="bg-primary text-on-primary text-left">
-                                    <th class="px-6 py-3.5 font-semibold">Name</th>
-                                    <th class="px-6 py-3.5 font-semibold">Email / Username</th>
-                                    <th class="px-6 py-3.5 font-semibold">Phone</th>
-                                    <th class="px-6 py-3.5 font-semibold">Assigned Sites</th>
-                                    <th class="px-6 py-3.5 font-semibold text-right">Actions</th>
+                            <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
+                                <tr>
+                                    <th class="px-5 py-3">Subcontractor</th>
+                                    <th class="px-5 py-3">Email / Username</th>
+                                    <th class="px-5 py-3">Phone</th>
+                                    <th class="px-5 py-3">Assigned Sites</th>
+                                    <th class="px-5 py-3 text-right">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="divide-y divide-surface-container">
                                 {% for contractor in page_obj %}
                                 {% with detail=contractor.user_detail %}
-                                <tr class="border-b border-surface-container last:border-0 hover:bg-surface/60">
-                                    <td class="px-6 py-4">
+                                <tr class="hover:bg-surface/60">
+                                    <td class="px-5 py-3">
                                         <div class="flex items-center gap-3">
                                             <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold shrink-0
                                                 {% cycle 'bg-primary/10 text-primary' 'bg-success/10 text-success' 'bg-warning/10 text-warning' 'bg-error/10 text-error' as avatar_color %}">
                                                 {% if detail and detail.first_name %}{{ detail.first_name|first|upper }}{{ detail.last_name|default:''|first|upper }}{% else %}{{ contractor.username|first|upper }}{% endif %}
                                             </div>
-                                            <span class="font-medium text-ink">
-                                                {% if detail and detail.first_name %}{{ detail.first_name }} {{ detail.last_name|default:'' }}{% else %}&mdash;{% endif %}
-                                            </span>
+                                            <a href="{% url 'ops:subcontractor_detail' contractor.id %}" class="font-medium text-ink hover:text-primary hover:underline">
+                                                {% if detail and detail.first_name %}{{ detail.first_name }} {{ detail.last_name|default:'' }}{% else %}@{{ contractor.username }}{% endif %}
+                                            </a>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-5 py-3">
                                         <div class="text-ink">{{ contractor.email|default:"—" }}</div>
                                         <div class="text-xs text-ink-light">@{{ contractor.username }}</div>
                                     </td>
-                                    <td class="px-6 py-4 text-ink-light">{{ detail.phone|default:"—" }}</td>
-                                    <td class="px-6 py-4 text-ink-light">{{ contractor.site_count }}</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-5 py-3 text-ink-light">{{ detail.phone|default:"—" }}</td>
+                                    <td class="px-5 py-3 text-ink-light">{{ contractor.site_count }}</td>
+                                    <td class="px-5 py-3">
                                         <div class="flex items-center justify-end gap-2">
-                                            <button type="button"
-                                                    title="View"
-                                                    onclick="openViewModal('{% if detail and detail.first_name %}{{ detail.first_name|escapejs }} {{ detail.last_name|default:''|escapejs }}{% else %}—{% endif %}', '{{ contractor.username|escapejs }}', '{{ contractor.email|default:''|escapejs }}', '{{ detail.phone|default:''|escapejs }}', {{ contractor.site_count }})"
-                                                    class="p-2 rounded-lg border border-surface-container-high hover:bg-surface-container transition-colors">
-                                                <span class="material-symbols-outlined text-ink-light" style="font-size: 18px;">visibility</span>
-                                            </button>
                                             <button type="button" title="Edit" onclick="openEditModal(this.dataset)"
                                                     data-action="{% url 'ops:subcontractor_update' contractor.id %}"
                                                     data-first_name="{{ detail.first_name|default:'' }}" data-last_name="{{ detail.last_name|default:'' }}"
@@ -91,7 +85,7 @@
                                 {% endwith %}
                                 {% empty %}
                                 <tr>
-                                    <td colspan="5" class="px-6 py-12 text-center text-ink-light">
+                                    <td colspan="5" class="px-5 py-12 text-center text-ink-light">
                                         {% if query %}No subcontractors match "{{ query }}".{% else %}No subcontractor accounts yet.{% endif %}
                                     </td>
                                 </tr>
@@ -135,46 +129,6 @@
                 </div>
             </div>
         </main>
-    </div>
-</div>
-
-<!-- View Subcontractor Modal -->
-<div id="view-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeViewModal();">
-    <div class="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto p-6">
-        <div class="flex items-center justify-between mb-5">
-            <h2 class="text-lg font-semibold text-ink">Subcontractor Details</h2>
-            <button type="button" onclick="closeViewModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
-                <span class="material-symbols-outlined text-ink-light">close</span>
-            </button>
-        </div>
-        <div class="space-y-4 text-sm">
-            <div>
-                <p class="text-ink-light">Name</p>
-                <p id="view-name" class="font-medium text-ink"></p>
-            </div>
-            <div>
-                <p class="text-ink-light">Username</p>
-                <p id="view-username" class="font-medium text-ink"></p>
-            </div>
-            <div>
-                <p class="text-ink-light">Email</p>
-                <p id="view-email" class="font-medium text-ink"></p>
-            </div>
-            <div>
-                <p class="text-ink-light">Phone</p>
-                <p id="view-phone" class="font-medium text-ink"></p>
-            </div>
-            <div>
-                <p class="text-ink-light">Assigned Sites</p>
-                <p id="view-sites" class="font-medium text-ink"></p>
-            </div>
-        </div>
-        <div class="flex justify-end mt-6">
-            <button type="button" onclick="closeViewModal()"
-                    class="px-4 py-2.5 rounded-xl border border-surface-container-high text-sm font-medium text-ink hover:bg-surface-container transition-colors">
-                Close
-            </button>
-        </div>
     </div>
 </div>
 
@@ -239,7 +193,6 @@
 {{ edit_state.modal|json_script:"edit-modal-reopen" }}
 <script>
     function showModal(el) {
-        closeViewModal();
         el.classList.remove('hidden');
         el.classList.add('flex');
     }
@@ -249,19 +202,6 @@
         el.classList.add('hidden');
     }
 
-    function openViewModal(name, username, email, phone, sitesCount) {
-        document.getElementById('view-name').textContent = name || '—';
-        document.getElementById('view-username').textContent = '@' + username;
-        document.getElementById('view-email').textContent = email || '—';
-        document.getElementById('view-phone').textContent = phone || '—';
-        document.getElementById('view-sites').textContent = sitesCount;
-        showModal(document.getElementById('view-modal'));
-    }
-
-    function closeViewModal() {
-        hideModal(document.getElementById('view-modal'));
-    }
-
     // `data` comes from an Edit button's data-* attributes (or the reopen state after a failed save).
     function openEditModal(data, keepErrors) {
         if (!keepErrors) document.querySelectorAll('#edit-form .form-error').forEach(function (el) { el.remove(); });
@@ -269,7 +209,6 @@
         ['first_name', 'last_name', 'username', 'email', 'phone'].forEach(function (name) {
             document.getElementById('edit-' + name).value = data[name] || '';
         });
-        closeViewModal();
         const modal = document.getElementById('edit-modal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
@@ -281,7 +220,6 @@
 
     document.addEventListener('keydown', function (event) {
         if (event.key === 'Escape') {
-            closeViewModal();
             closeEditModal();
         }
     });

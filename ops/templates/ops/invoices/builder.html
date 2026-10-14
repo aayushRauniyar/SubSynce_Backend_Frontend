@@ -31,7 +31,7 @@
         <section class="p-5 card" aria-labelledby="details-heading">
             <h2 id="details-heading" class="ui-section-title mb-4">Details</h2>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {% for field in header %}{% if field.name != 'notes' and field.name != 'terms' %}
+                {% for field in header %}{% if field.name != 'notes' and field.name != 'terms' and field.name != 'gst' %}
                 <div {% if field.name == 'site' %}class="sm:col-span-2"{% endif %}>
                     <label for="{{ field.id_for_label }}" class="ui-label">{{ field.label }}</label>
                     {% if field.name == 'site' %}
@@ -66,14 +66,24 @@
 
     <aside class="space-y-4">
         <section class="p-5 card lg:sticky lg:top-4" aria-labelledby="summary-heading">
+            {% if company.logo %}
+            <img src="{{ company.logo.url }}" alt="{{ company.name }} logo" class="h-9 max-w-[12rem] object-contain mb-4">
+            {% else %}
             <img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync" class="h-9 mb-4 dark:hidden">
             <img src="{% static 'images/subsync-logo-dark.svg' %}" alt="SubSync" class="h-9 mb-4 hidden dark:block">
+            {% endif %}
             <h2 id="summary-heading" class="ui-section-title mb-3">Summary</h2>
             <dl class="space-y-2 text-sm">
                 <div class="flex justify-between"><dt class="text-ink-light">Lines</dt><dd id="line-count" class="tabular-nums">0</dd></div>
                 <div class="flex justify-between"><dt class="text-ink-light">Services billed</dt><dd id="qty-total" class="tabular-nums">0</dd></div>
+                <div class="flex justify-between pt-2 border-t border-surface-container {% if not header.gst.value %}hidden{% endif %}" data-gst-row><dt class="text-ink-light">Subtotal (ex GST)</dt><dd id="subtotal" class="tabular-nums">$0.00</dd></div>
+                <div class="flex justify-between {% if not header.gst.value %}hidden{% endif %}" data-gst-row><dt class="text-ink-light">GST (10%)</dt><dd id="gst-total" class="tabular-nums">$0.00</dd></div>
                 <div class="flex justify-between pt-2 border-t border-surface-container text-base"><dt class="font-semibold text-ink">Total (AUD)</dt><dd id="grand-total" class="font-bold tabular-nums text-ink" aria-live="polite">$0.00</dd></div>
             </dl>
+            <label for="id_gst" class="mt-4 flex items-center gap-2 p-3 rounded-xl border border-surface-container-high text-sm font-medium text-ink cursor-pointer hover:bg-surface-container">
+                <input type="checkbox" name="gst" id="id_gst" value="on" class="w-4 h-4 accent-[#F27E22]" {% if header.gst.value %}checked{% endif %}>
+                Include GST (10%)
+            </label>
             <p class="ui-help mt-3">The office checks this invoice against your recorded jobs before approving it.</p>
             <button class="ui-btn ui-btn-primary mt-4 w-full">
                 <span class="material-symbols-outlined" aria-hidden="true">send</span>{% if invoice %}Save Changes{% else %}Submit Invoice{% endif %}

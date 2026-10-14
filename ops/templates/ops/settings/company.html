@@ -1,22 +1,39 @@
 {% extends 'ops/layouts/app.html' %}
 {% load static %}
 
-{% block title %}Company Settings - SubSync{% endblock %}
+{% block title %}Company Info - SubSync{% endblock %}
 
 {% block page %}
 <div class="max-w-2xl">
-    <h1 class="text-2xl font-bold text-ink">Company Settings</h1>
+    <h1 class="text-2xl font-bold text-ink">Company Info</h1>
     <p class="text-ink-light text-sm mt-1">These details appear on every printed invoice.</p>
 
-    <form method="post" class="card p-5 mt-5 space-y-4" novalidate>
+    <form method="post" enctype="multipart/form-data" class="card p-5 mt-5 space-y-4" novalidate>
         {% csrf_token %}
+        {% with field=form.logo %}
         <div>
-            <p class="block text-sm font-medium text-ink mb-2">Logo</p>
-            <img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync" class="h-9 dark:hidden">
-            <img src="{% static 'images/subsync-logo-dark.svg' %}" alt="SubSync" class="h-9 hidden dark:block">
-            <p class="text-xs text-ink-light mt-1">Invoices always use the SubSync logo.</p>
+            <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-ink mb-2">Logo <span class="text-ink-light font-normal">(optional)</span></label>
+            <div class="flex items-center gap-4">
+                {% if profile.logo %}
+                <img src="{{ profile.logo.url }}" alt="{{ profile.name }} logo" class="h-12 max-w-[12rem] object-contain rounded-lg border border-surface-container-high bg-white p-1">
+                {% else %}
+                <img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync" class="h-9 dark:hidden">
+                <img src="{% static 'images/subsync-logo-dark.svg' %}" alt="SubSync" class="h-9 hidden dark:block">
+                {% endif %}
+                <input type="file" name="{{ field.name }}" id="{{ field.id_for_label }}" accept="image/png,image/jpeg,image/webp"
+                       class="text-sm text-ink file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border-0 file:bg-ink file:text-surface file:text-sm file:font-medium hover:file:bg-primary"
+                       {% if field.errors %}aria-invalid="true" aria-describedby="{{ field.id_for_label }}-error"{% endif %}>
+            </div>
+            {% if profile.logo %}
+            <label class="inline-flex items-center gap-2 text-sm text-ink mt-2">
+                <input type="checkbox" name="{{ field.name }}-clear" id="{{ field.name }}-clear_id"> Remove logo and use the SubSync logo
+            </label>
+            {% endif %}
+            <p class="text-xs text-ink-light mt-1">JPG, PNG or WebP up to 2MB.{% if not profile.logo %} Until you upload one, the SubSync logo is used.{% endif %}</p>
+            {% if field.errors %}<p id="{{ field.id_for_label }}-error" class="text-xs text-error mt-1">{{ field.errors|join:" " }}</p>{% endif %}
         </div>
-        {% for field in form %}
+        {% endwith %}
+        {% for field in form %}{% if field.name != 'logo' %}
         <div>
             <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-ink mb-1">{{ field.label }}{% if not field.field.required %} <span class="text-ink-light font-normal">(optional)</span>{% endif %}</label>
             {% if field.name == 'default_terms' %}
@@ -29,7 +46,7 @@
             {% endif %}
             {% if field.errors %}<p id="{{ field.id_for_label }}-error" class="text-xs text-error mt-1">{{ field.errors|join:" " }}</p>{% endif %}
         </div>
-        {% endfor %}
+        {% endif %}{% endfor %}
         <button class="px-5 py-2.5 rounded-xl bg-ink text-surface text-sm font-medium hover:bg-primary transition-colors">Save Settings</button>
     </form>
 </div>

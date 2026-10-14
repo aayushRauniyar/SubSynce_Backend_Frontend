@@ -4,7 +4,7 @@ These mirror the backend's own calculations (dashboard/api/views) so the web
 screens and the API agree. Nothing here writes to the database.
 """
 from datetime import date, timedelta
-from decimal import Decimal
+from decimal import ROUND_HALF_UP, Decimal
 
 from django.db import models
 from django.db.models import Sum
@@ -16,6 +16,11 @@ from schedule.model.cleaningschedule import ServiceSchedule
 from work.model.workcomplete import CompleteWork
 
 ZERO = Decimal("0.00")
+
+# Australian GST. The backend only stores whether an invoice includes GST
+# (invoice.gst); amount stays the ex-GST total of the line items, so reports
+# and verification compare like with like.
+GST_RATE = Decimal("0.10")
 
 
 def _total(queryset):
@@ -107,6 +112,24 @@ def contractor_jobs(user):
     return ServiceSchedule.objects.filter(site__assigned_contractor=user).select_related("site")
 
 
+def monthly_approved_earnings(user, months=12, today=None):
+    """Approved invoice totals per month (by invoice date) for the last `months` months, oldest first."""
+    today = today or date.today()
+    starts = []
+    year, month = today.year, today.month
+    for _ in range(months):
+        starts.append(date(year, month, 1))
+        year, month = (year - 1, 12) if month == 1 else (year, month - 1)
+    starts.reverse()
+    totals = {
+        (row["invoice_date__year"], row["invoice_date__month"]): row["total"]
+        for row in ContractorInvoice.objects.filter(
+            created_by=user, status="APPROVED", invoice_date__gte=starts[0]
+        ).values("invoice_date__year", "invoice_date__month").annotate(total=Sum("amount"))
+    }
+    return [{"month": s, "total": totals.get((s.year, s.month)) or ZERO} for s in starts]
+
+
 def contractor_dashboard(user, start=None, end=None):
     """
     The ContractorDashboard API's figures (dashboard/api/views/user_views.py,
@@ -159,7 +182,6 @@ def contractor_summary(user, today=None):
             scheduled_date__lte=today + timedelta(days=14),
             status="SCHEDULED",
         ).order_by("scheduled_date", "scheduled_time")[:10],
-        "in_progress": work.filter(status="IN_PROGRESS").select_related("schedule__site"),
         "completed_count": work.filter(status="COMPLETED").count(),
         "sites": Site.objects.filter(assigned_contractor=user).count(),
         "invoices": {
@@ -250,6 +272,13 @@ def verify_invoice(invoice):
         "client_value": expected,
         "flags": flags,
     }
+
+
+def invoice_totals(invoice):
+    """Subtotal, GST and total payable for an invoice; gst is None when it's not included."""
+    subtotal = invoice.amount or ZERO
+    gst = (subtotal * GST_RATE).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) if invoice.gst else None
+    return {"subtotal": subtotal, "gst": gst, "total": subtotal + (gst or ZERO)}
 
 
 def _next_number(model, prefix, today=None):

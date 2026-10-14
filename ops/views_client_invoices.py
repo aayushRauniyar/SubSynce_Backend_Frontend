@@ -101,7 +101,7 @@ def _save_builder(invoice, form, formset):
 
 
 def _apply_header(invoice, data):
-    for field in ("invoice_number", "site", "invoice_date", "service_period_start", "service_period_end"):
+    for field in ("invoice_number", "site", "invoice_date", "service_period_start", "service_period_end", "gst"):
         setattr(invoice, field, data[field])
     invoice.client = data["site"].client_id
 
@@ -176,6 +176,7 @@ def client_invoice_edit_view(request, pk):
             "service_period_end": invoice.service_period_end,
             "notes": extra.notes if extra else (invoice.remarks or ""),
             "terms": extra.terms if extra else "",
+            "gst": invoice.gst,
         })
         items = [
             {"description": i.description, "quantity": i.quantity, "unit_price": i.unit_price}
@@ -205,6 +206,7 @@ def client_invoice_detail_view(request, pk):
         "invoice": invoice,
         "items": invoice.line_items.all(),
         "extra": getattr(invoice, "builder", None),
+        "totals": services.invoice_totals(invoice),
         "next_statuses": NEXT_STATUSES[invoice.status],
         "work": services.completed_work_value(invoice.site, invoice.service_period_start, invoice.service_period_end),
     })
@@ -235,5 +237,6 @@ def client_invoice_print_view(request, pk):
         "invoice": invoice,
         "items": list(invoice.line_items.all()),
         "extra": getattr(invoice, "builder", None),
+        "totals": services.invoice_totals(invoice),
         "company": CompanyProfile.load(),
     })

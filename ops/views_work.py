@@ -1,26 +1,18 @@
 """Work completion screens (brief 3.6).
 
-Contractors clock in to a scheduled job, then clock out with notes and
-optional photos. Staff see the completion log. Rules mirror the backend's
-work API (work/api/views/user_views.py): only the assigned contractor, only
-SCHEDULED jobs, one work record per job, times stamped by the server.
+Contractors see their jobs and past work records. Staff see the completion
+log.
 """
 from datetime import date
 
-from django.contrib import messages
 from django.core.paginator import Paginator
-from django.db import transaction
 from django.db.models import Q
 from django.http import Http404
-from django.shortcuts import get_object_or_404, redirect, render
-from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.shortcuts import get_object_or_404, render
 
 from ops import services
 from ops.access import contractor_required, is_staff_user, role_required, staff_required, CONTRACTOR, STAFF_ROLES
-from ops.forms import ClockOutForm
-from schedule.model.cleaningschedule import ServiceSchedule
-from work.model.workcomplete import CompleteWork, WorkCompleteImage
+from work.model.workcomplete import CompleteWork
 
 
 @contractor_required
@@ -29,7 +21,6 @@ def my_jobs_view(request):
     jobs = services.contractor_jobs(request.user).select_related("work_completion")
     to_do = jobs.filter(status="SCHEDULED", work_completion__isnull=True, scheduled_date__lte=today)
     upcoming = jobs.filter(status="SCHEDULED", work_completion__isnull=True, scheduled_date__gt=today)
-    in_progress = CompleteWork.objects.filter(completed_by=request.user, status="IN_PROGRESS").select_related("schedule__site")
     history = Paginator(
         CompleteWork.objects.filter(completed_by=request.user)
         .exclude(status="IN_PROGRESS")
@@ -41,66 +32,8 @@ def my_jobs_view(request):
         "today": today,
         "to_do": to_do.order_by("scheduled_date", "scheduled_time"),
         "upcoming": upcoming.order_by("scheduled_date", "scheduled_time")[:20],
-        "in_progress": in_progress,
         "history": history,
     })
-
-
-@contractor_required
-@require_POST
-def clock_in_view(request, schedule_id):
-    schedule = ServiceSchedule.objects.filter(
-        id=schedule_id, site__assigned_contractor=request.user, status="SCHEDULED"
-    ).first()
-    if not schedule:
-        messages.error(request, "That job isn't scheduled for you.")
-        return redirect("ops:my_jobs")
-    if schedule.scheduled_date > date.today():
-        messages.error(request, "You can only clock in on or after the scheduled day.")
-        return redirect("ops:my_jobs")
-    if CompleteWork.objects.filter(schedule=schedule).exists():
-        messages.error(request, "Work has already been started for this job.")
-        return redirect("ops:my_jobs")
-
-    work = CompleteWork.objects.create(
-        schedule=schedule,
-        completed_by=request.user,
-        check_in_time=timezone.now(),
-        status="IN_PROGRESS",
-        location=request.POST.get("location", "").strip()[:255] or None,
-    )
-    messages.success(request, f"Clocked in at {schedule.site.name}.")
-    return redirect("ops:clock_out", work_id=work.id)
-
-
-@contractor_required
-def clock_out_view(request, work_id):
-    work = get_object_or_404(
-        CompleteWork.objects.select_related("schedule__site"),
-        id=work_id, completed_by=request.user,
-    )
-    if work.check_out_time:
-        messages.info(request, "This job is already clocked out.")
-        return redirect("ops:work_detail", work_id=work.id)
-
-    if request.method == "POST":
-        form = ClockOutForm(request.POST, photos=request.FILES.getlist("photos"))
-        if form.is_valid():
-            with transaction.atomic():
-                work.completion_notes = form.cleaned_data["completion_notes"] or None
-                if form.cleaned_data["location"]:
-                    work.location = form.cleaned_data["location"]
-                work.check_out_time = timezone.now()
-                work.status = "COMPLETED"
-                work.save()
-                for photo in form.photos:
-                    WorkCompleteImage.objects.create(work_completion=work, evidence_photo=photo)
-            messages.success(request, f"Job at {work.schedule.site.name} marked complete.")
-            return redirect("ops:work_detail", work_id=work.id)
-    else:
-        form = ClockOutForm(initial={"location": work.location})
-
-    return render(request, "ops/work/clock_out.html", {"work": work, "form": form})
 
 
 @role_required(CONTRACTOR, *STAFF_ROLES)

@@ -1,15 +1,4 @@
-{# Site thumbnail: first gallery image (site.images, prefetched by _with_images) or a placeholder. Opens the full image. #}
-{% with img=site.images.all.0 %}
-<div class="w-12 h-12 shrink-0">
-    {% if img %}
-    <a href="{{ img.image.url }}" target="_blank" rel="noopener" title="Open image" class="block w-12 h-12">
-        <img src="{{ img.image.url }}" alt="{{ site.name }}" loading="lazy" width="48" height="48"
-             class="w-12 h-12 rounded-xl object-cover border border-surface-container-high bg-surface-container"
-             onerror="this.parentElement.classList.add('hidden'); this.parentElement.nextElementSibling.classList.remove('hidden');">
-    </a>
-    {% endif %}
-    <span class="{% if img %}hidden {% endif %}w-12 h-12 rounded-xl bg-surface-container border border-surface-container-high text-ink-light flex items-center justify-center" title="No image">
-        <span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">image</span>
-    </span>
-</div>
-{% endwith %}
+{# Site icon for list rows. Photos are shown on the site's own page (site_detail.html), not here. #}
+<span class="w-12 h-12 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center" aria-hidden="true">
+    <span class="material-symbols-outlined" style="font-size: 22px;">apartment</span>
+</span>
