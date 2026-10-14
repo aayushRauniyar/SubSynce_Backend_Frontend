@@ -14,14 +14,16 @@ class SitesPageTests(TestCase):
         self.site.cleaning_instructions = "Mop the lobby last."
         self.site.save()
 
-    def test_list_shows_name_link_frequency_contractor_and_actions(self):
+    def test_list_shows_name_link_address_frequency_price_and_actions(self):
         login(self.client, self.admin)
         resp = self.client.get(reverse("ops:sites"))
         self.assertContains(resp, reverse("ops:site_detail", args=[self.site.pk]))
-        self.assertContains(resp, ">Contractor</th>")
-        self.assertNotContains(resp, ">Address</th>")
-        self.assertNotContains(resp, ">Price</th>")
-        self.assertContains(resp, "alex")
+        # Same column set and header style as the other admin tables (Client Invoices is the reference).
+        for heading in ("Site", "Address", "Frequency", "Price", "Actions"):
+            self.assertContains(resp, f">{heading}</th>")
+        self.assertNotContains(resp, ">Contractor</th>")
+        self.assertContains(resp, self.site.address)
+        self.assertContains(resp, "$450.00")
         self.assertContains(resp, reverse("ops:site_delete", args=[self.site.pk]))
 
     def test_detail_shows_every_field_and_next_service(self):

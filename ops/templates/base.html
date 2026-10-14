@@ -21,7 +21,7 @@
         })();
     </script>
     
-    <!-- Poppins: the one app font (Tailwind's font-sans below), as in the SubSync designs -->
+    <!-- Poppins: the one app font (Tailwind's font-sans below), as in the SubSync designs. Loaded once, here. -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Material Symbols Icons -->
@@ -78,7 +78,7 @@
     </script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=layout-v1">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=merge-v2">
     
     {% block extra_head %}{% endblock %}
 </head>

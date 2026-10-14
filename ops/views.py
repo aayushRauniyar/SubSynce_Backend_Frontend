@@ -1,7 +1,9 @@
+import csv
 import uuid
 from datetime import timedelta
 from decimal import Decimal
 
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
@@ -271,20 +273,13 @@ def _is_admin(request):
     return request.user.is_authenticated and request.user.role in STAFF_ROLES
 
 
-@login_required
-def clients_view(request):
-    """
-    Clients list page - Administrator only.
-
-    Supports search (?q=) across name/phone/email and pagination (?page=).
-    """
-    if not _is_admin(request):
-        messages.error(request, 'Only administrators can access client management.')
-        return redirect('ops:dashboard')
-
+def _filtered_clients(request):
+    """Clients matching ?q= (name/phone/email) and ?status= (a real Client status); shared by the list and its CSV export."""
     query = request.GET.get('q', '').strip()
+    status = request.GET.get('status', '').strip().upper()
+    if status not in dict(Client.STATUS_CHOICES):
+        status = ''
     clients = Client.objects.all().prefetch_related('sites', 'assigned_sites').order_by('-created_at')
-
     if query:
         clients = clients.filter(
             Q(first_name__icontains=query)
@@ -292,14 +287,51 @@ def clients_view(request):
             | Q(email__icontains=query)
             | Q(phone__icontains=query)
         )
+    if status:
+        clients = clients.filter(status=status)
+    return clients, query, status
+
+
+def _clients_csv(clients):
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    response['Content-Disposition'] = f'attachment; filename="clients_{timezone.localdate():%Y-%m-%d}.csv"'
+    response.write('\ufeff')  # UTF-8 byte order mark so Excel reads non-ASCII names correctly
+    writer = csv.writer(response)
+    writer.writerow(['Client', 'Phone', 'Email', 'Assigned Sites', 'Status'])
+    for c in clients:
+        writer.writerow([f"{c.first_name} {c.last_name or ''}".strip(), c.phone or '', c.email or '',
+                         c.sites.count(), c.get_status_display()])
+    return response
+
+
+@login_required
+def clients_view(request):
+    """
+    Clients list page - Administrator only.
+
+    Supports search (?q=) across name/phone/email, a status filter (?status=ACTIVE|INACTIVE),
+    pagination (?page=), and ?format=csv to download the filtered list.
+    """
+    if not _is_admin(request):
+        messages.error(request, 'Only administrators can access client management.')
+        return redirect('ops:dashboard')
+
+    clients, query, status = _filtered_clients(request)
+    if request.GET.get('format') == 'csv':
+        return _clients_csv(clients)
 
     paginator = Paginator(clients, 8)
     page_obj = paginator.get_page(request.GET.get('page'))
+    filters = {k: v for k, v in {'q': query, 'status': status}.items() if v}
 
     context = {
         'user': request.user,
         'page_obj': page_obj,
         'query': query,
+        'status': status,
+        'status_choices': Client.STATUS_CHOICES,
+        'filter_qs': urlencode(filters),
+        'export_qs': urlencode({**filters, 'format': 'csv'}),
         'total_clients': paginator.count,
         'client_form': ClientForm(),  # site + status options for the Edit Client modal
     }

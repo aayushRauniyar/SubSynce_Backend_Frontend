@@ -108,3 +108,92 @@ class ClientAccessTests(TestCase):
         resp = self.client.post(reverse("ops:client_create"), {**data, "email": "b@x.com"})
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, "removed client")
+
+
+class ClientFilterExportTests(TestCase):
+    """Clients page status filter (?status=) and CSV export (?format=csv) share one query."""
+
+    def setUp(self):
+        from client.model.clientmanage import Client
+        self.active = Client.objects.create(first_name="Acme", last_name="Cleaning", phone="0400100001",
+                                            email="acme@x.com", role="ADMINISTRATOR", status="ACTIVE")
+        self.inactive = Client.objects.create(first_name="Old", last_name="Corp", phone="0400100002",
+                                              email="old@x.com", role="ADMINISTRATOR", status="INACTIVE")
+        self.other_active = Client.objects.create(first_name="Zeta", phone="0400100003", email="zeta@x.com",
+                                                  role="ADMINISTRATOR", status="ACTIVE")
+        self.gone = Client.objects.create(first_name="Removed", phone="0400100004", role="ADMINISTRATOR", status="ACTIVE")
+        self.gone.delete()  # soft delete
+        from client.model.clientmanage import Site
+        Site.objects.create(name="Acme HQ", address="1 King William St", cleaning_frequency="WEEKLY",
+                            price=Decimal("450.00"), client_id=self.active)
+        self.admin = make_user("ADMINISTRATOR")
+        login(self.client, self.admin)
+
+    def _listed(self, **params):
+        resp = self.client.get(reverse("ops:clients"), params)
+        self.assertEqual(resp.status_code, 200)
+        return resp, {c.first_name for c in resp.context["page_obj"]}
+
+    def _csv(self, **params):
+        resp = self.client.get(reverse("ops:clients"), {**params, "format": "csv"})
+        self.assertEqual(resp.status_code, 200)
+        self.assertTrue(resp["Content-Type"].startswith("text/csv"))
+        self.assertIn("attachment;", resp["Content-Disposition"])
+        self.assertRegex(resp["Content-Disposition"], r'filename="clients_\d{4}-\d{2}-\d{2}\.csv"')
+        import csv, io
+        return list(csv.reader(io.StringIO(resp.content.decode("utf-8-sig"))))
+
+    def test_all_clients_lists_every_live_client(self):
+        _, names = self._listed()
+        self.assertEqual(names, {"Acme", "Old", "Zeta"})
+
+    def test_status_filters_use_real_values(self):
+        self.assertEqual(self._listed(status="ACTIVE")[1], {"Acme", "Zeta"})
+        self.assertEqual(self._listed(status="INACTIVE")[1], {"Old"})
+        # Unknown values are ignored rather than hiding everything.
+        self.assertEqual(self._listed(status="BOGUS")[1], {"Acme", "Old", "Zeta"})
+
+    def test_search_and_filter_combine_and_stay_selected(self):
+        resp, names = self._listed(q="a", status="ACTIVE")
+        self.assertEqual(names, {"Acme", "Zeta"})
+        self.assertContains(resp, '<option value="ACTIVE" selected>Active</option>', html=True)
+        self.assertContains(resp, 'value="a"')
+        # Export link carries the same search and filter.
+        self.assertContains(resp, 'href="?q=a&amp;status=ACTIVE&amp;format=csv"')
+
+    def test_export_matches_filter_and_search(self):
+        rows = self._csv()
+        self.assertEqual(rows[0], ["Client", "Phone", "Email", "Assigned Sites", "Status"])
+        self.assertIn(["Acme Cleaning", "0400100001", "acme@x.com", "1", "Active"], rows)
+        self.assertEqual(len(rows), 4)  # header + 3 live clients
+        self.assertEqual([r[0] for r in self._csv(status="INACTIVE")[1:]], ["Old Corp"])
+        self.assertEqual([r[0] for r in self._csv(q="zeta", status="ACTIVE")[1:]], ["Zeta"])
+
+    def test_export_excludes_soft_deleted_clients(self):
+        self.assertNotIn("Removed", [r[0] for r in self._csv()])
+
+    def test_contractor_cannot_view_or_export(self):
+        login(self.client, make_user("CONTRACTOR"))
+        for params in ({}, {"format": "csv"}):
+            resp = self.client.get(reverse("ops:clients"), params)
+            self.assertRedirects(resp, reverse("ops:dashboard"), fetch_redirect_response=False)
+        self.client.logout()
+        resp = self.client.get(reverse("ops:clients"), {"format": "csv"})
+        self.assertEqual(resp.status_code, 302)
+        self.assertNotIn("text/csv", resp.get("Content-Type", ""))
+
+    def test_status_column_shows_real_status_badges(self):
+        resp, _ = self._listed()
+        self.assertContains(resp, ">Status</th>")
+        self.assertContains(resp, '<span class="pill pill-active">Active</span>', count=2, html=True)
+        self.assertContains(resp, '<span class="pill pill-inactive">Inactive</span>', count=1, html=True)
+
+    def test_status_column_handles_blank_and_unexpected_values(self):
+        from client.model.clientmanage import Client
+        Client.objects.filter(pk=self.other_active.pk).update(status="")
+        Client.objects.filter(pk=self.inactive.pk).update(status="ARCHIVED")
+        resp, names = self._listed()
+        self.assertEqual(names, {"Acme", "Old", "Zeta"})
+        self.assertContains(resp, '<span class="pill pill-active">Active</span>', count=1, html=True)
+        self.assertNotContains(resp, "pill-inactive")  # no made-up status for the blank one
+        self.assertContains(resp, '<span class="pill pill-archived">ARCHIVED</span>', html=True)
