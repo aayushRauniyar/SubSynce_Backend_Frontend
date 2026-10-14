@@ -352,3 +352,44 @@ html.dark [data-ui="contractor"] .ui-card-link:hover { box-shadow: 0 4px 14px rg
 @media (prefers-reduced-motion: reduce) {
     * { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
 }
+
+/* Icons are font ligatures: keep each one a fixed 1em square so the icon name
+   never pushes the layout around (or shows as text) before the font arrives. */
+.material-symbols-outlined {
+    display: inline-block;
+    width: 1em;
+    overflow: hidden;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* Dark mode for screens built with fixed hex colours (Clients, Sites, Schedules,
+   Users, the contractor portal, login). Those classes never change with the
+   theme, so map them onto the palette tokens here instead of editing each page. */
+html.dark [class*="text-[#222222]"],
+html.dark [class*="text-[#202224]"] { color: rgb(var(--c-ink)); }
+html.dark [class*="text-[#494949]"] { color: rgb(var(--c-ink-light)); }
+html.dark [class*="border-[#E2E2E2]"],
+html.dark [class*="border-[#E9E9E9]"],
+html.dark [class*="border-[#F0E6DD]"],
+html.dark [class*="border-[#E9E2DC]"],
+html.dark [class*="border-[#ADADAD]"],
+html.dark [class*="border-[#494949]"],
+html.dark [class*="border-[#5B5A77]"] { border-color: var(--outline-variant); }
+html.dark [class*="divide-[#E9E9E9]"] > :not([hidden]) ~ :not([hidden]) { border-color: var(--hairline); }
+html.dark [class*=" bg-[#F3F3F3]"],
+html.dark [class^="bg-[#F3F3F3]"],
+html.dark [class*="hover:bg-[#F3F3F3]"]:hover { background-color: rgb(var(--c-surface-c)); }
+html.dark [class*=" bg-[#FAF2E8]"],
+html.dark [class^="bg-[#FAF2E8]"],
+html.dark [class*="bg-[#FDEEE4]"],
+html.dark [class*="bg-[#F5EEE6]"],
+html.dark [class*="hover:bg-[#FAF2E8]"]:hover { background-color: rgb(var(--c-secondary-container)); }
+html.dark [class*="bg-[#E3F8EC]"] { background-color: rgb(var(--c-success) / 0.15); color: rgb(var(--c-success)); }
+html.dark [class*="bg-[#E3F0FF]"] { background-color: rgb(var(--c-scheduled) / 0.15); color: rgb(var(--c-scheduled)); }
+html.dark [class*="bg-[#EEEAFD]"] { background-color: rgb(var(--c-violet) / 0.15); color: rgb(var(--c-violet)); }
+html.dark [class*="bg-[#FFF6DB]"] { background-color: rgb(var(--c-warning) / 0.15); color: rgb(var(--c-warning)); }
+/* Warm page gradients become the plain dark page background */
+html.dark [class*="bg-[linear-gradient"],
+html.dark [class*="from-[#"],
+html.dark main[style*="gradient"] { background: rgb(var(--c-surface)) !important; }

@@ -5,6 +5,7 @@
     <span class="ui-card-icon bg-{{ tone|default:'primary' }}/10 text-{{ tone|default:'primary' }}"><span class="material-symbols-outlined" style="font-size: 20px;" aria-hidden="true">{{ icon }}</span></span>
 </div>
 {% else %}
+{% comment %}Usage: include with icon, tone (primary|success|warning|error), value, label, hint; optional value_class (e.g. text-error) for the number{% endcomment %}
 <div class="card p-5 ">
     <div class="flex items-center justify-between mb-3">
         <div class="w-10 h-10 rounded-xl bg-{{ tone|default:'primary' }}/10 flex items-center justify-center">
@@ -12,7 +13,7 @@
         </div>
         {% if hint %}<span class="text-xs text-ink-light">{{ hint }}</span>{% endif %}
     </div>
-    <p class="text-2xl font-bold text-ink tabular-nums">{{ value }}</p>
+    <p class="text-2xl font-bold {{ value_class|default:'text-ink' }} tabular-nums">{{ value }}</p>
     <p class="text-sm text-ink-light mt-0.5">{{ label }}</p>
 </div>
 {% endif %}

@@ -24,7 +24,11 @@
 <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-5">
     {% include 'ops/partials/stat_card.html' with icon='payments' tone='success' value=totals.revenue|money label='Revenue' %}
     {% include 'ops/partials/stat_card.html' with icon='request_quote' tone='warning' value=totals.cost|money label='Cost' %}
+    {% if totals.profit < 0 %}
+    {% include 'ops/partials/stat_card.html' with icon='trending_down' tone='error' value=totals.profit|money value_class='text-error' label='Loss' hint=totals.margin|percent %}
+    {% else %}
     {% include 'ops/partials/stat_card.html' with icon='trending_up' tone='primary' value=totals.profit|money label='Profit' hint=totals.margin|percent %}
+    {% endif %}
     {% include 'ops/partials/stat_card.html' with icon='task_alt' value=totals.completed label='Completed jobs' hint=totals.work_value|money %}
 </div>
 
@@ -59,7 +63,7 @@
                     <td class="px-5 py-3 text-right">{{ c.revenue|money }}</td>
                     <td class="px-5 py-3 text-right">{{ c.cost|money }}</td>
                     <td class="px-5 py-3 text-right font-semibold {% if c.profit < 0 %}text-error{% endif %}">{{ c.profit|money }}</td>
-                    <td class="px-5 py-3 text-right">{{ c.margin|percent }}</td>
+                    <td class="px-5 py-3 text-right {% if c.margin < 0 %}text-error{% endif %}">{{ c.margin|percent }}</td>
                 </tr>
                 {% endfor %}
                 {% else %}
@@ -72,7 +76,7 @@
                     <td class="px-5 py-3 text-right">{{ r.revenue|money }}</td>
                     <td class="px-5 py-3 text-right">{{ r.cost|money }}</td>
                     <td class="px-5 py-3 text-right font-semibold {% if r.profit < 0 %}text-error{% endif %}">{{ r.profit|money }}</td>
-                    <td class="px-5 py-3 text-right">{{ r.margin|percent }}</td>
+                    <td class="px-5 py-3 text-right {% if r.margin < 0 %}text-error{% endif %}">{{ r.margin|percent }}</td>
                 </tr>
                 {% empty %}
                 <tr><td colspan="8" class="px-5 py-10 text-center text-ink-light">No sites yet.</td></tr>
@@ -87,7 +91,7 @@
                     <td class="px-5 py-3 text-right">{{ totals.revenue|money }}</td>
                     <td class="px-5 py-3 text-right">{{ totals.cost|money }}</td>
                     <td class="px-5 py-3 text-right {% if totals.profit < 0 %}text-error{% endif %}">{{ totals.profit|money }}</td>
-                    <td class="px-5 py-3 text-right">{{ totals.margin|percent }}</td>
+                    <td class="px-5 py-3 text-right {% if totals.margin < 0 %}text-error{% endif %}">{{ totals.margin|percent }}</td>
                 </tr>
             </tfoot>
         </table>

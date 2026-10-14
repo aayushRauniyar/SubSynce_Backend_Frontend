@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% load static %}
+{% load static ops_extras %}
 
 {% block title %}Dashboard - SubSync{% endblock %}
 
@@ -72,7 +72,7 @@
                     {% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}<a href="{% url 'ops:subcontractors' %}" aria-label="View subcontractors" class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between block hover:shadow-md transition-shadow focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40">{% else %}<div class="bg-white rounded-2xl p-5 border border-surface-container shadow-sm min-h-[143px] flex flex-col justify-between">{% endif %}
                         <div class="flex items-center justify-between">
                             <p class="text-sm font-medium text-ink-light">Subcontractors</p>
-                            <div class="w-10 h-10 rounded-xl bg-[#F5EEE0] flex items-center justify-center">
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
                                 <span class="material-symbols-outlined text-primary" style="font-size: 20px;">engineering</span>
                             </div>
                         </div>
@@ -180,7 +180,7 @@
                             {% if invoices_summary.recent %}
                             <div class="flex items-center justify-between text-xs text-ink-light border-t border-surface-container mt-2 pt-2">
                                 <span>{{ invoices_summary.recent.invoice_number }} • {{ invoices_summary.recent.site.name }}</span>
-                                <span class="font-medium text-ink">${{ invoices_summary.recent.amount|floatformat:2 }}</span>
+                                <span class="font-medium text-ink tabular-nums">{{ invoices_summary.recent.amount|money }}</span>
                             </div>
                             {% endif %}
                         </div>
@@ -208,22 +208,22 @@
                             </div>
                             <div class="flex items-center justify-between text-sm py-1">
                                 <span class="text-ink-light">Revenue</span>
-                                <span class="font-medium text-ink">${{ month_financials.revenue|floatformat:2 }}</span>
+                                <span class="font-medium text-ink tabular-nums">{{ month_financials.revenue|money }}</span>
                             </div>
                             <div class="flex items-center justify-between text-sm py-1">
                                 <span class="text-ink-light">Cost</span>
-                                <span class="font-medium text-ink">${{ month_financials.cost|floatformat:2 }}</span>
+                                <span class="font-medium text-ink tabular-nums">{{ month_financials.cost|money }}</span>
                             </div>
                             <div class="flex items-center justify-between text-sm py-1">
-                                <span class="text-ink-light">Profit</span>
-                                <span class="font-semibold text-success">${{ month_financials.profit|floatformat:2 }}</span>
+                                <span class="text-ink-light">{% if month_financials.profit < 0 %}Loss{% else %}Profit{% endif %}</span>
+                                <span class="font-semibold tabular-nums {% if month_financials.profit < 0 %}text-error{% else %}text-success{% endif %}">{{ month_financials.profit|money }}</span>
                             </div>
                             <div class="flex items-center justify-between text-xs text-ink-light mt-2 mb-1">
                                 <span>Profit margin</span>
-                                <span>{{ month_financials.margin }}%</span>
+                                <span class="tabular-nums {% if month_financials.margin < 0 %}text-error{% endif %}">{{ month_financials.margin }}%</span>
                             </div>
                             <div class="w-full h-1.5 rounded-full bg-surface-container overflow-hidden">
-                                <div class="h-full bg-success rounded-full" style="width: {{ month_financials.margin }}%;"></div>
+                                <div class="h-full rounded-full {% if month_financials.margin < 0 %}bg-error{% else %}bg-success{% endif %}" style="width: {{ month_financials.margin_bar }}%;"></div>
                             </div>
                             <a href="{% url 'ops:profitability' %}"
                                class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline mt-3">

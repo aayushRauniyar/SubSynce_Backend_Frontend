@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load ops_extras %}
 
 {% block title %}{{ client.first_name }} {{ client.last_name|default:'' }} - SubSync{% endblock %}
 
@@ -99,7 +100,7 @@
                                             {{ site.cleaning_frequency|capfirst }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-6 text-center">${{ site.price|floatformat:2 }}</td>
+                                    <td class="px-4 py-6 text-center">{{ site.price|money }}</td>
                                     <td class="px-4 py-6">
                                         {% include 'ops/partials/_site_actions.html' %}
                                     </td>
