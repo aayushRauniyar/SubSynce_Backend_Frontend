@@ -14,3 +14,9 @@ class ClientsListTests(TestCase):
         self.assertContains(resp, f'<a href="{detail}"', count=1)
         self.assertNotContains(resp, ">visibility</span>")
         self.assertEqual(self.client.get(detail).status_code, 200)
+
+    def test_site_names_on_client_page_link_to_site_detail(self):
+        site = make_site()
+        login(self.client, make_user("ADMINISTRATOR"))
+        resp = self.client.get(reverse("ops:client_detail", args=[site.client_id.pk]))
+        self.assertContains(resp, f'<a href="{reverse("ops:site_detail", args=[site.pk])}"')

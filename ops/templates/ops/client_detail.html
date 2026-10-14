@@ -81,7 +81,7 @@
                                 {% with freq=site.cleaning_frequency|lower %}
                                 <tr class="border-b border-[#E2E2E2] last:border-0">
                                     <td class="px-6 py-4">
-                                        <div class="flex items-center gap-3 min-w-0">{% include 'ops/partials/_site_thumb.html' %}<span class="min-w-0 break-words">{{ site.name }}</span></div>
+                                        <div class="flex items-center gap-3 min-w-0">{% include 'ops/partials/_site_thumb.html' %}<a href="{% url 'ops:site_detail' site.id %}" class="min-w-0 break-words hover:text-[#F27E22] hover:underline">{{ site.name }}</a></div>
                                     </td>
                                     <td class="px-4 py-6 text-center text-[#494949] leading-relaxed max-w-[240px] mx-auto">{{ site.address }}</td>
                                     <td class="px-4 py-6 text-center">
