@@ -2,12 +2,8 @@
 
 {% block title %}User Management - SubSync{% endblock %}
 
-{% block extra_head %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
-<div class="flex h-screen overflow-hidden font-['Poppins']">
+<div class="flex h-screen overflow-hidden">
     {% include 'ops/partials/_sidebar.html' with active='users' %}
 
     <div class="flex-1 flex flex-col overflow-hidden">
@@ -147,7 +143,7 @@
 <!-- Add / Edit User modal -->
 {% with field='w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm' label='block text-sm font-medium text-ink mb-1.5' %}
 <div id="user-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeUserModal();">
-    <div class="bg-white rounded-2xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto p-6 font-['Poppins']">
+    <div class="bg-white rounded-2xl w-full max-w-[600px] max-h-[90vh] overflow-y-auto p-6">
         <div class="flex items-center justify-between mb-5">
             <h2 id="user-modal-title" class="text-lg font-semibold text-ink">Add User</h2>
             <button type="button" onclick="closeUserModal()" class="p-1.5 rounded-lg hover:bg-surface-container">

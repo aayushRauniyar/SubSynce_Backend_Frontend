@@ -242,8 +242,6 @@ html.dark [data-ui="contractor"] {
 @media (min-width: 1280px) { [data-ui="contractor"] { --ui-gutter: 48px; } }
 @media (min-width: 1536px) { [data-ui="contractor"] { --ui-gutter: 56px; } }
 
-body[data-ui="contractor"] { font-family: 'Poppins', system-ui, sans-serif; }
-
 /* Page container and header */
 [data-ui="contractor"] .ui-page { width: 100%; max-width: 1600px; margin: 0 auto; padding: 24px var(--ui-gutter) 48px; }
 @media (min-width: 1280px) { [data-ui="contractor"] .ui-page { padding-top: 32px; } }

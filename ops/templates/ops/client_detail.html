@@ -3,13 +3,9 @@
 
 {% block title %}{{ client.first_name }} {{ client.last_name|default:'' }} - SubSync{% endblock %}
 
-{% block extra_head %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
 {% with full_name=client.first_name|add:' '|add:client.last_name|default:client.first_name %}
-<div class="flex h-screen overflow-hidden font-['Poppins']">
+<div class="flex h-screen overflow-hidden">
     {% include 'ops/partials/_sidebar.html' with active='clients' %}
 
     <div class="flex-1 flex flex-col overflow-hidden">

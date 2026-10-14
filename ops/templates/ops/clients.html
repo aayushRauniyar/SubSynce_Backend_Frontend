@@ -45,19 +45,22 @@
                     </div>
 
                     <div class="flex items-center gap-2 shrink-0">
-                        <!-- Visual-only: no status field exists on Client yet, so this doesn't filter -->
-                        <button type="button" disabled title="No client status field exists yet"
-                                class="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-white border border-surface-container-high text-sm text-ink-light cursor-not-allowed">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">filter_list</span>
-                            All Clients
-                            <span class="material-symbols-outlined" style="font-size: 16px;">expand_more</span>
-                        </button>
-                        <!-- Visual-only: no export feature exists yet -->
-                        <button type="button" disabled title="Export isn't implemented yet"
-                                class="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-white border border-surface-container-high text-sm text-ink-light cursor-not-allowed">
-                            <span class="material-symbols-outlined" style="font-size: 16px;">ios_share</span>
+                        <!-- Status filter: submits with the current search (server-side) -->
+                        <div class="relative">
+                            <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-light" style="font-size: 16px;" aria-hidden="true">filter_list</span>
+                            <select name="status" onchange="this.form.submit()" aria-label="Filter clients by status"
+                                    class="appearance-none h-10 pl-9 pr-9 rounded-xl bg-white border border-surface-container-high text-sm text-ink focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary cursor-pointer">
+                                <option value="">All Clients</option>
+                                {% for value, label in status_choices %}<option value="{{ value }}" {% if status == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                            </select>
+                            <span class="material-symbols-outlined pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-light" style="font-size: 16px;" aria-hidden="true">expand_more</span>
+                        </div>
+                        <!-- Export: CSV of the clients matching the current search and filter -->
+                        <a href="?{{ export_qs }}" download
+                           class="flex items-center gap-1.5 h-10 px-3.5 rounded-xl bg-white border border-surface-container-high text-sm text-ink hover:bg-surface-container transition-colors">
+                            <span class="material-symbols-outlined" style="font-size: 16px;" aria-hidden="true">ios_share</span>
                             Export
-                        </button>
+                        </a>
                     </div>
                 </form>
 
@@ -67,9 +70,6 @@
                         <table class="w-full min-w-[720px] text-sm">
                             <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
                                 <tr>
-                                    <th class="pl-5 pr-2 py-3 w-10">
-                                        <input type="checkbox" id="select-all" class="w-4 h-4 rounded accent-primary" aria-label="Select all clients">
-                                    </th>
                                     <th class="px-5 py-3">Client</th>
                                     <th class="px-5 py-3">Phone</th>
                                     <th class="px-5 py-3">Email</th>
@@ -80,9 +80,6 @@
                             <tbody class="divide-y divide-surface-container">
                                 {% for client in page_obj %}
                                 <tr class="hover:bg-surface/60">
-                                    <td class="pl-5 pr-2 py-3">
-                                        <input type="checkbox" class="row-checkbox w-4 h-4 rounded accent-primary">
-                                    </td>
                                     <td class="px-5 py-3 font-medium text-ink"><a href="{% url 'ops:client_detail' client.id %}" class="hover:text-primary hover:underline">{{ client.first_name }} {{ client.last_name|default:'' }}</a></td>
                                     <td class="px-5 py-3 text-ink-light">{{ client.phone|default:"—" }}</td>
                                     <td class="px-5 py-3 text-ink-light">{{ client.email|default:"—" }}</td>
@@ -108,8 +105,8 @@
                                 </tr>
                                 {% empty %}
                                 <tr>
-                                    <td colspan="6" class="px-5 py-12 text-center text-ink-light">
-                                        {% if query %}No clients match "{{ query }}".{% else %}No clients yet. Add your first client to get started.{% endif %}
+                                    <td colspan="5" class="px-5 py-12 text-center text-ink-light">
+                                        {% if query or status %}No clients match your search or filter.{% else %}No clients yet. Add your first client to get started.{% endif %}
                                     </td>
                                 </tr>
                                 {% endfor %}
@@ -125,19 +122,19 @@
                         </p>
                         <div class="flex items-center gap-1.5">
                             {% if page_obj.has_previous %}
-                            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.previous_page_number }}"
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.previous_page_number }}"
                                class="w-7 h-7 flex items-center justify-center rounded-lg border border-surface-container-high hover:bg-surface-container text-ink-light">
                                 <span class="material-symbols-outlined" style="font-size: 15px;">chevron_left</span>
                             </a>
                             {% endif %}
                             {% for num in page_obj.paginator.page_range %}
-                            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ num }}"
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ num }}"
                                class="w-7 h-7 flex items-center justify-center rounded-lg text-xs {% if num == page_obj.number %}bg-primary text-on-primary{% else %}border border-surface-container-high hover:bg-surface-container text-ink-light{% endif %}">
                                 {{ num }}
                             </a>
                             {% endfor %}
                             {% if page_obj.has_next %}
-                            <a href="?{% if query %}q={{ query }}&{% endif %}page={{ page_obj.next_page_number }}"
+                            <a href="?{% if filter_qs %}{{ filter_qs }}&{% endif %}page={{ page_obj.next_page_number }}"
                                class="w-7 h-7 flex items-center justify-center rounded-lg border border-surface-container-high hover:bg-surface-container text-ink-light">
                                 <span class="material-symbols-outlined" style="font-size: 15px;">chevron_right</span>
                             </a>
@@ -156,17 +153,4 @@
 </div>
 
 {% include 'ops/partials/_client_edit_modal.html' %}
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    const selectAllCheckbox = document.getElementById('select-all');
-    if (selectAllCheckbox) {
-        selectAllCheckbox.addEventListener('change', function () {
-            document.querySelectorAll('.row-checkbox').forEach(function (checkbox) {
-                checkbox.checked = selectAllCheckbox.checked;
-            });
-        });
-    }
-</script>
 {% endblock %}
