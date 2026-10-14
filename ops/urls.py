@@ -68,6 +68,8 @@ urlpatterns = [
     # Work completion (contractor jobs, staff log)
     path('jobs/', views_work.my_jobs_view, name='my_jobs'),
     path('my-sites/', views.my_sites_view, name='my_sites'),
+    path('my-sites/<uuid:pk>/', views.my_site_detail_view, name='my_site_detail'),
+    path('jobs/<uuid:pk>/', views.my_job_detail_view, name='my_job_detail'),
     path('work/<uuid:work_id>/', views_work.work_detail_view, name='work_detail'),
     path('completions/', views_work.completions_view, name='completions'),
     path('completions/<uuid:work_id>/', views_work.work_detail_view, name='completion_detail'),

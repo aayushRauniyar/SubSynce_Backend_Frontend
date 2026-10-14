@@ -69,6 +69,7 @@ def _build_contractor_portal_context(request):
             'time': schedule.scheduled_time,
             'date': schedule.scheduled_date,
             'is_today': schedule.scheduled_date == today,
+            'id': schedule.id,
             'site_name': schedule.site.name,
             'site_address': schedule.site.address,
             'service_info': schedule.site.cleaning_frequency,
@@ -1037,3 +1038,49 @@ def my_sites_view(request):
         )
     )
     return render(request, 'ops/contractor/my_sites.html', {'sites': sites})
+
+
+@contractor_required
+def my_site_detail_view(request, pk):
+    """One of the contractor's own sites: details, photos, upcoming services and their past work there.
+
+    Sites assigned to someone else 404, so contractors can't read other contractors' sites.
+    The site price (what the client is charged) is left out on purpose.
+    """
+    site = get_object_or_404(
+        _with_images(Site.objects.select_related('client_id')), id=pk, assigned_contractor=request.user
+    )
+    today = timezone.localdate()
+    context = {
+        'site': site,
+        'upcoming': site.service_schedules.filter(status='SCHEDULED', scheduled_date__gte=today)
+            .order_by('scheduled_date', 'scheduled_time')[:10],
+        'my_work': CompleteWork.objects.filter(schedule__site=site, completed_by=request.user)
+            .select_related('schedule').order_by('-check_in_time')[:10],
+    }
+    return render(request, 'ops/contractor/site_detail.html', context)
+
+
+@contractor_required
+def my_job_detail_view(request, pk):
+    """One scheduled service on the contractor's own site: when, where, what to do, and their work record."""
+    job = get_object_or_404(
+        ServiceSchedule.objects.select_related('site__client_id'),
+        id=pk, site__assigned_contractor=request.user,
+    )
+    work = (
+        CompleteWork.objects.filter(schedule=job, completed_by=request.user)
+        .prefetch_related('work_completion_images').first()
+    )
+    site = _with_images(Site.objects.filter(pk=job.site_id)).first()
+    today = timezone.localdate()
+    context = {
+        'job': job,
+        'site': site,
+        'work': work,
+        'status': services.job_status(job),
+        'overdue': job.status == 'SCHEDULED' and not work and job.scheduled_date < today,
+        'duration': (work.check_out_time - work.check_in_time)
+            if work and work.check_in_time and work.check_out_time else None,
+    }
+    return render(request, 'ops/contractor/job_detail.html', context)
