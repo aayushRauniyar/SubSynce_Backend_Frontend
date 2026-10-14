@@ -141,3 +141,36 @@ class ContractorDeleteAndNamingTests(TestCase):
         resp = self.client.get(page)
         self.assertContains(resp, "Passwords do not match.")
         self.assertContains(resp, '"username": "natr"')
+
+
+class ContractorCannotManageContractorsTests(TestCase):
+    def test_contractor_is_blocked_from_every_contractor_admin_action(self):
+        from authuser.model.user import User
+        other = make_user("CONTRACTOR", username="other")
+        me = make_user("CONTRACTOR", username="me")
+        login(self.client, me)
+        dashboard = reverse("ops:dashboard")
+        for url in (reverse("ops:subcontractors"), reverse("ops:subcontractor_detail", args=[other.pk])):
+            self.assertRedirects(self.client.get(url), dashboard, fetch_redirect_response=False)
+        self.client.post(reverse("ops:user_delete", args=[other.pk]))
+        self.client.post(reverse("ops:subcontractor_update", args=[other.pk]), {"first_name": "X", "username": "hacked", "email": "x@example.com"})
+        self.client.post(reverse("ops:user_create"), {"first_name": "N", "username": "newbie", "email": "n@example.com", "role": "CONTRACTOR",
+                                                      "password1": "Strong#Pass123", "password2": "Strong#Pass123"})
+        other.refresh_from_db()
+        self.assertIsNone(other.deleted_at)
+        self.assertEqual(other.username, "other")
+        self.assertFalse(User.objects.filter(username="newbie").exists())
+        # Nothing on the contractor's own pages links to these admin actions.
+        for url in (dashboard, reverse("ops:invoices")):
+            html = self.client.get(url).content.decode()
+            for name in ("ops:subcontractors", "ops:user_create"):
+                self.assertNotIn(reverse(name), html)
+
+    def test_contractor_gets_no_admin_page(self):
+        login(self.client, make_user("CONTRACTOR"))
+        for name in ("clients", "client_create", "sites", "schedules", "users", "subcontractors", "calendar",
+                     "completions", "client_invoices", "client_invoice_create", "profitability", "company_settings"):
+            resp = self.client.get(reverse(f"ops:{name}"))
+            self.assertIn(resp.status_code, (302, 403), name)
+            if resp.status_code == 302:
+                self.assertEqual(resp.url, reverse("ops:dashboard"), name)
