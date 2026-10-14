@@ -1,6 +1,6 @@
 {# Top-right account menu (trigger + dropdown card), shared by every top bar. Opened/closed by the script in base.html. #}
 {# Optional: `display_name` / `role_label` override the defaults (the contractor portal passes them). #}
-{% with item='ui-menu-item flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm transition-colors' off='text-ink-light/50 cursor-not-allowed' %}
+{% with item='ui-menu-item flex items-center gap-3 w-full px-3 py-2 rounded-xl text-sm transition-colors' %}
 <div class="relative min-w-0" data-account-menu>
     <button type="button" data-account-trigger aria-haspopup="menu" aria-expanded="false" aria-label="Account menu"
             class="ui-account-trigger flex items-center gap-2 min-w-0 pl-1 pr-1 py-1 rounded-xl hover:bg-surface-container transition-colors">
@@ -29,30 +29,15 @@
         </div>
         <div class="my-1 border-t border-surface-container-high"></div>
 
-        <!-- Role-specific items; ones without a page yet are shown disabled -->
-        <span class="{{ item }} {{ off }}" role="menuitem" aria-disabled="true" title="Profile page isn't available yet">
-            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">account_circle</span>My Profile
-        </span>
+        <!-- Role-specific link -->
         {% if user.role == 'CONTRACTOR' %}
         <a href="{% url 'ops:my_sites' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink" role="menuitem">
             <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">location_on</span>My Assigned Sites
         </a>
-        <span class="{{ item }} {{ off }}" role="menuitem" aria-disabled="true" title="Account settings aren't available yet">
-            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">manage_accounts</span>Account Settings
-        </span>
         {% else %}
         <a href="{% url 'ops:users' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink" role="menuitem">
             <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">group</span>Users
         </a>
-        {% if user.role == 'OWNER' %}
-        <a href="{% url 'ops:company_settings' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink" role="menuitem">
-            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">settings</span>Company Settings
-        </a>
-        {% else %}
-        <span class="{{ item }} {{ off }}" role="menuitem" aria-disabled="true" title="Company settings are available to the Owner">
-            <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">settings</span>Company Settings
-        </span>
-        {% endif %}
         {% endif %}
 
         <div class="my-1 border-t border-surface-container-high"></div>

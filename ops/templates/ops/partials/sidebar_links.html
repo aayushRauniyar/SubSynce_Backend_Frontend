@@ -1,6 +1,6 @@
 {# Contractor navigation, rendered inside the shared partials/_sidebar.html shell. Mirrors the ContractorDashboard API: sites, services, invoices, earnings. #}
 {% load ops_extras %}
-{% with item='ui-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors' off='text-ink-light/50 cursor-not-allowed' %}
+{% with item='ui-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors' %}
 <div class="space-y-1">
     <a href="{% url 'ops:dashboard' %}" class="{{ item }} {% nav_class 'dashboard' %}">
         <span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span>
@@ -22,13 +22,6 @@
 <div class="ui-nav-divider" role="separator"></div>
 
 <div class="space-y-1">
-    <!-- No contractor Profile or Help page exists yet -->
-    <span class="{{ item }} {{ off }}" title="Profile isn't available yet" aria-disabled="true">
-        <span class="material-symbols-outlined" aria-hidden="true">person</span><span>Profile</span>
-    </span>
-    <span class="{{ item }} {{ off }}" title="Help isn't available yet" aria-disabled="true">
-        <span class="material-symbols-outlined" aria-hidden="true">help</span><span>Help</span>
-    </span>
     <a href="{% url 'ops:logout' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink">
         <span class="material-symbols-outlined" aria-hidden="true">logout</span><span>Logout</span>
     </a>
