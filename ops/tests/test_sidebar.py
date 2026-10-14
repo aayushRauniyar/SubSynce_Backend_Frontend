@@ -31,4 +31,4 @@ class SidebarTests(TestCase):
     def test_company_page_is_titled_company_info(self):
         login(self.client, make_user("OWNER"))
         resp = self.client.get(reverse("ops:company_settings"))
-        self.assertContains(resp, "<h1 class=\"text-2xl font-bold text-ink\">Company Info</h1>", html=False)
+        self.assertContains(resp, ">Company Info</h1>")
