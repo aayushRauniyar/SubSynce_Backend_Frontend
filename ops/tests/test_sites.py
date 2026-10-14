@@ -50,3 +50,14 @@ class SitesPageTests(TestCase):
         login(self.client, self.admin)
         for url in (reverse("ops:sites"), reverse("ops:site_detail", args=[self.site.pk])):
             self.assertNotContains(self.client.get(url), "{#")
+
+    def test_list_shows_icon_not_site_photo(self):
+        from django.core.files.uploadedfile import SimpleUploadedFile
+        from client.model.clientmanage import SiteImage
+        import tempfile
+        from django.test import override_settings
+        with override_settings(MEDIA_ROOT=tempfile.mkdtemp()):
+            img = SiteImage.objects.create(site=self.site, image=SimpleUploadedFile("p.png", b"x", content_type="image/png"))
+            login(self.client, self.admin)
+            self.assertNotContains(self.client.get(reverse("ops:sites")), f"<img src=\"{img.image.url}\"")  # URL stays only in the Edit button data
+            self.assertContains(self.client.get(reverse("ops:site_detail", args=[self.site.pk])), img.image.url)

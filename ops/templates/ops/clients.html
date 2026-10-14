@@ -83,16 +83,12 @@
                                     <td class="pl-6 pr-2 py-3">
                                         <input type="checkbox" class="row-checkbox w-4 h-4 rounded accent-primary">
                                     </td>
-                                    <td class="px-3 py-3 font-medium text-ink">{{ client.first_name }} {{ client.last_name }}</td>
+                                    <td class="px-3 py-3 font-medium text-ink"><a href="{% url 'ops:client_detail' client.id %}" class="hover:text-primary hover:underline">{{ client.first_name }} {{ client.last_name|default:'' }}</a></td>
                                     <td class="px-3 py-3 text-ink-light">{{ client.phone|default:"—" }}</td>
                                     <td class="px-3 py-3 text-ink-light">{{ client.email|default:"—" }}</td>
                                     <td class="px-3 py-3 text-ink-light">{{ client.sites.count }}</td>
                                     <td class="px-3 py-3 pr-6">
                                         <div class="flex items-center justify-end gap-1.5">
-                                            <a href="{% url 'ops:client_detail' client.id %}" title="View"
-                                               class="p-1.5 rounded-lg border border-surface-container-high hover:bg-surface-container transition-colors">
-                                                <span class="material-symbols-outlined text-ink-light" style="font-size: 16px;">visibility</span>
-                                            </a>
                                             <button type="button"
                                                     title="Edit"
                                                     onclick="openClientModal(this.dataset)" {% include 'ops/partials/_client_data_attrs.html' %}
