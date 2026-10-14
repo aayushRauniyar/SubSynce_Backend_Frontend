@@ -41,6 +41,7 @@ urlpatterns = [
 
     # Subcontractors (protected - Administrator only, read-only)
     path('subcontractors/', views.subcontractors_view, name='subcontractors'),
+    path('subcontractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
 
     # Password reset (Django's built-in views and tokens)
     path('forgot-password/', auth_views.PasswordResetView.as_view(
@@ -67,6 +68,8 @@ urlpatterns = [
 
     # Work completion (contractor clock-in/out, staff log)
     path('jobs/', views_work.my_jobs_view, name='my_jobs'),
+    path('my-sites/', views.my_sites_view, name='my_sites'),
+    path('my-earnings/', views.my_earnings_view, name='my_earnings'),
     path('jobs/<uuid:schedule_id>/clock-in/', views_work.clock_in_view, name='clock_in'),
     path('work/<uuid:work_id>/clock-out/', views_work.clock_out_view, name='clock_out'),
     path('work/<uuid:work_id>/', views_work.work_detail_view, name='work_detail'),

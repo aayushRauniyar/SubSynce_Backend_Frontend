@@ -7,6 +7,7 @@
             data-price="{{ site.price|stringformat:'s' }}"
             data-contractor="{{ site.assigned_contractor_id|default:'' }}"
             data-instructions="{{ site.cleaning_instructions|default:'' }}"
+            data-images="{% for img in site.images.all %}{{ img.id }}|{{ img.image.url }}{% if not forloop.last %},{% endif %}{% endfor %}"
             class="w-8 h-8 flex items-center justify-center rounded-md border border-[#E2E2E2] text-[#3B5BDB] hover:bg-[#F3F3F3] transition-colors">
         <span class="material-symbols-outlined" style="font-size: 16px;">edit</span>
     </button>

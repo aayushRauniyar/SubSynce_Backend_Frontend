@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime, timedelta
+from datetime import timedelta
 from decimal import Decimal
 
 from django.shortcuts import get_object_or_404, render, redirect
@@ -9,20 +9,20 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import IntegrityError, transaction
-from django.db.models import Count, Q, Sum
+from django.db.models import Count, Min, Prefetch, Q, Sum
 from django.utils import timezone
 from django.utils.http import url_has_allowed_host_and_scheme, urlencode
 from django.utils.timesince import timesince
 from django.views.decorators.http import require_POST, require_http_methods
 
-from client.model.clientmanage import Client, Site
+from client.model.clientmanage import Client, Site, SiteImage
 from authuser.model.user import User
 from schedule.model.cleaningschedule import ServiceSchedule
 from work.model.workcomplete import CompleteWork, WorkCompleteImage
 from invoice.model.invoicemanagement import ClientInvoice, ContractorInvoice
 from ops import services
-from ops.access import STAFF_ROLES, forbidden, is_contractor, is_staff_user
-from ops.forms import MANAGEABLE_ROLES, clean_evidence_photos, ClientCreateForm, ClientForm, ScheduleForm, ScheduleStatusForm, SiteForm, UserForm
+from ops.access import STAFF_ROLES, contractor_required, forbidden, is_contractor, is_staff_user
+from ops.forms import MANAGEABLE_ROLES, clean_evidence_photos, ClientCreateForm, ClientForm, ScheduleForm, ScheduleStatusForm, SiteForm, SubcontractorForm, UserForm
 
 
 def _contractor_label(user):
@@ -54,56 +54,7 @@ def _build_contractor_portal_context(request):
     """
     user = request.user
     today = timezone.localdate()
-    now = timezone.localtime()
-    week_start = today - timedelta(days=today.weekday())
-    week_end = week_start + timedelta(days=6)
-
     my_schedules = ServiceSchedule.objects.filter(site__assigned_contractor=user)
-
-    today_jobs_count = my_schedules.filter(scheduled_date=today).count()
-
-    next_schedule = (
-        my_schedules.filter(status='SCHEDULED')
-        .filter(
-            Q(scheduled_date__gt=today)
-            | Q(scheduled_date=today, scheduled_time__gte=now.time())
-        )
-        .order_by('scheduled_date', 'scheduled_time')
-        .first()
-    )
-    next_service = None
-    if next_schedule:
-        next_dt = datetime.combine(next_schedule.scheduled_date, next_schedule.scheduled_time)
-        if timezone.is_naive(next_dt):
-            next_dt = timezone.make_aware(next_dt)
-
-        if next_schedule.scheduled_date == today:
-            minutes_left = max(int((next_dt - now).total_seconds() // 60), 0)
-            hours, minutes = divmod(minutes_left, 60)
-            if hours and minutes:
-                relative = f"In {hours} hr {minutes} min"
-            elif hours:
-                relative = f"In {hours} hr"
-            elif minutes:
-                relative = f"In {minutes} min"
-            else:
-                relative = "Starting now"
-        elif next_schedule.scheduled_date == today + timedelta(days=1):
-            relative = "Tomorrow"
-        else:
-            relative = next_schedule.scheduled_date.strftime('%a, %d %b')
-
-        next_service = {'time': next_schedule.scheduled_time, 'relative': relative}
-
-    completed_this_week = CompleteWork.objects.filter(
-        completed_by=user,
-        status='COMPLETED',
-        schedule__scheduled_date__range=[week_start, week_end],
-    ).count()
-
-    pending_invoices = ContractorInvoice.objects.filter(created_by=user, status='PENDING')
-    pending_invoice_total = pending_invoices.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    pending_invoice_count = pending_invoices.count()
 
     assigned = (
         my_schedules.filter(status='SCHEDULED', scheduled_date__gte=today)
@@ -136,13 +87,7 @@ def _build_contractor_portal_context(request):
     )
 
     return {
-        'today_jobs_count': today_jobs_count,
-        'next_service': next_service,
-        'completed_this_week': completed_this_week,
-        'pending_invoices': {
-            'total': pending_invoice_total,
-            'count': pending_invoice_count,
-        },
+        'dashboard': services.contractor_dashboard(user),  # summary cards: same figures as the ContractorDashboard API
         'assigned_jobs': assigned_jobs,
         'check_in_jobs': check_in_jobs,
         'active_work': active_work,
@@ -228,7 +173,6 @@ def dashboard_view(request):
         context = {
             'user': user,
             'full_name': _full_name(user),
-            'summary': services.contractor_summary(user),
             **_build_contractor_portal_context(request),
         }
         return render(request, 'ops/subcontractor_portal.html', context)
@@ -412,6 +356,7 @@ def subcontractors_view(request):
         'page_obj': page_obj,
         'query': query,
         'total_contractors': paginator.count,
+        'edit_state': request.session.pop('subcontractor_form_state', None),  # set by a failed edit
     }
     return render(request, 'ops/subcontractors.html', context)
 
@@ -427,7 +372,7 @@ def client_detail_view(request, pk):
     context = {
         'user': request.user,
         'client': client,
-        'sites': client.sites.order_by('name'),
+        'sites': _with_images(client.sites.order_by('name')),
         'client_form': ClientForm(),  # site + status options for the Edit Client modal
         **_site_form_context(),
     }
@@ -544,7 +489,7 @@ def sites_view(request):
     client_filter = request.GET.get('client', '').strip()
     frequency = request.GET.get('frequency', '').strip()
 
-    sites = Site.objects.select_related('client_id', 'assigned_contractor').order_by('name')
+    sites = _with_images(Site.objects.select_related('client_id', 'assigned_contractor').order_by('name'))
     if query:
         sites = sites.filter(
             Q(name__icontains=query)
@@ -577,11 +522,35 @@ def sites_view(request):
     return render(request, 'ops/sites.html', context)
 
 
+def _with_images(sites):
+    """Prefetch each site's gallery (SiteImage, related_name='images'): only rows with a file, oldest first."""
+    return sites.prefetch_related(Prefetch(
+        'images', queryset=SiteImage.objects.exclude(image='').exclude(image__isnull=True).order_by('created_at')
+    ))
+
+
 def _save_site(request, instance=None):
-    """Validate and save a SiteForm, flashing the outcome."""
+    """
+    Validate and save a SiteForm, flashing the outcome. Images follow the Site API:
+    uploads are added as SiteImage rows (like `site_image` / POST site-image/), and
+    ticked existing images are removed (like DELETE remove-site-image/); others are kept.
+    """
     form = SiteForm(request.POST, instance=instance)
+    images = request.FILES.getlist('images')
+    try:
+        clean_evidence_photos(images)  # real images, 5MB max each
+    except ValidationError as e:
+        messages.error(request, f"Could not save site. Images: {' '.join(e.messages)}")
+        return _redirect_back(request, 'ops:sites')
     if form.is_valid():
-        form.save()
+        with transaction.atomic():
+            site = form.save()
+            for image in images:
+                SiteImage.objects.create(site=site, image=image)
+            if instance:
+                remove_ids = [i for i in map(_uuid_or_none, request.POST.getlist('remove_images')) if i]
+                for image in SiteImage.objects.filter(site=site, id__in=remove_ids):
+                    image.delete()
         messages.success(request, 'Site updated successfully.' if instance else 'Site added successfully.')
     else:
         errors = '; '.join(f"{form.fields[f].label if f in form.fields else f}: {' '.join(e)}" for f, e in form.errors.items())
@@ -857,6 +826,14 @@ def users_view(request):
     return render(request, 'ops/users.html', context)
 
 
+def _form_errors(form):
+    """Field -> messages, for re-showing a modal's errors after a redirect."""
+    return {
+        ('non_field' if f == '__all__' else f): [e['message'] for e in errs]
+        for f, errs in form.errors.get_json_data().items()
+    }
+
+
 def _save_user(request, instance=None):
     form = UserForm(request.POST, instance=instance, actor=request.user)
     if form.is_valid():
@@ -873,10 +850,7 @@ def _save_user(request, instance=None):
                 'email': request.POST.get('email', ''),
                 'role': request.POST.get('role', ''),
             },
-            'errors': {
-                ('non_field' if f == '__all__' else f): [e['message'] for e in errs]
-                for f, errs in form.errors.get_json_data().items()
-            },
+            'errors': _form_errors(form),
         }
         messages.error(request, 'Could not save user. Please fix the errors shown in the form.')
     return _redirect_back(request, 'ops:users')
@@ -911,6 +885,33 @@ def user_update_view(request, pk):
         return redirect('ops:dashboard')
     target = _managed_user_or_none(request, pk)
     return _save_user(request, instance=target) if target else _redirect_back(request, 'ops:users')
+
+
+@login_required
+@require_POST
+def subcontractor_update_view(request, pk):
+    """Edit a contractor's name, username, email and phone from the Subcontractors page."""
+    if not _is_admin(request):
+        messages.error(request, 'Only administrators can manage subcontractors.')
+        return redirect('ops:dashboard')
+    target = _managed_user_or_none(request, pk)
+    if target and target.role != 'CONTRACTOR':
+        messages.error(request, 'Only subcontractor accounts can be edited here.')
+    elif target:
+        form = SubcontractorForm(request.POST, instance=target, actor=request.user)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Subcontractor updated successfully.')
+        else:
+            request.session['subcontractor_form_state'] = {
+                'modal': {
+                    'action': request.path,
+                    **{k: request.POST.get(k, '') for k in ('first_name', 'last_name', 'username', 'email', 'phone')},
+                },
+                'errors': _form_errors(form),
+            }
+            messages.error(request, 'Could not update subcontractor. Please fix the errors shown in the form.')
+    return _redirect_back(request, 'ops:subcontractors')
 
 
 @login_required
@@ -991,3 +992,34 @@ def portal_check_out_view(request):
             WorkCompleteImage.objects.create(work_completion=work, evidence_photo=image)
     messages.success(request, f'Work at {work.schedule.site.name} submitted as completed.')
     return redirect('ops:dashboard')
+
+
+@contractor_required
+def my_sites_view(request):
+    """Read-only list of the contractor's own assigned sites (ContractorDashboard `sites`)."""
+    upcoming = Q(
+        service_schedules__status='SCHEDULED',
+        service_schedules__scheduled_date__gte=timezone.localdate(),
+        service_schedules__deleted_at__isnull=True,
+    )
+    sites = _with_images(
+        Site.objects.filter(assigned_contractor=request.user).order_by('name').annotate(
+            upcoming_count=Count('service_schedules', filter=upcoming),
+            next_service=Min('service_schedules__scheduled_date', filter=upcoming),
+        )
+    )
+    return render(request, 'ops/contractor/my_sites.html', {'sites': sites})
+
+
+@contractor_required
+def my_earnings_view(request):
+    """The contractor's earnings: same figures as ContractorDashboard `earnings`, plus the approved invoices behind them."""
+    approved = (
+        ContractorInvoice.objects.filter(created_by=request.user, status='APPROVED')
+        .select_related('site').order_by('-invoice_date', '-created_at')
+    )
+    context = {
+        'earnings': services.contractor_dashboard(request.user)['earnings'],
+        'invoices': approved,
+    }
+    return render(request, 'ops/contractor/my_earnings.html', context)

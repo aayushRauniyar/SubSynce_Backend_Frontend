@@ -13,6 +13,8 @@
         (function () {
             var theme = 'light';
             try { theme = localStorage.getItem('subsync-theme') || 'light'; } catch (e) {}
+            // Sign-in pages are designed light-only (no toggle there).
+            if ({% block force_light_theme %}false{% endblock %}) theme = 'light';
             var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             document.documentElement.classList.toggle('dark', dark);
             document.documentElement.setAttribute('data-theme', theme);
@@ -23,6 +25,10 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net">
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
     
+    <!-- Poppins (shared sidebar and the SubSync page designs) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <!-- Material Symbols Icons -->
     <!-- Material Symbols Icons: one fixed style (not the multi-MB variable font), and
          display=block so icon names stay invisible instead of showing as text while it loads. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -76,11 +82,12 @@
     </script>
     
     <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=contractor-v2">
     <link rel="stylesheet" href="{% static 'css/app.css' %}?v=palette-v4">
     
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-surface text-ink font-sans min-h-screen">
+<body class="bg-surface text-ink font-sans min-h-screen"{% if user.role == 'CONTRACTOR' %} data-ui="contractor"{% endif %}>
     
     <!-- Messages (Success, Error, etc.) -->
     {% if messages %}
@@ -126,6 +133,35 @@
             if (overlay) overlay.addEventListener('click', function () { setOpen(false); });
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') setOpen(false);
+            });
+        })();
+    </script>
+
+    <!-- Account menu (top-right): toggle on click, close on outside click or Escape -->
+    <script>
+        (function () {
+            function setOpen(menu, open) {
+                menu.querySelector('[data-account-panel]').classList.toggle('hidden', !open);
+                menu.querySelector('[data-account-trigger]').setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            document.addEventListener('click', function (event) {
+                document.querySelectorAll('[data-account-menu]').forEach(function (menu) {
+                    var panel = menu.querySelector('[data-account-panel]');
+                    if (menu.querySelector('[data-account-trigger]').contains(event.target)) {
+                        setOpen(menu, panel.classList.contains('hidden'));
+                    } else if (!panel.contains(event.target)) {
+                        setOpen(menu, false);
+                    }
+                });
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape') return;
+                document.querySelectorAll('[data-account-menu]').forEach(function (menu) {
+                    if (!menu.querySelector('[data-account-panel]').classList.contains('hidden')) {
+                        setOpen(menu, false);
+                        menu.querySelector('[data-account-trigger]').focus();
+                    }
+                });
             });
         })();
     </script>

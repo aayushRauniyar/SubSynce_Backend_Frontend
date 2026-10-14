@@ -1,46 +1,36 @@
+{# Contractor navigation, rendered inside the shared partials/_sidebar.html shell. Mirrors the ContractorDashboard API: sites, services, invoices, earnings. #}
 {% load ops_extras %}
-{% with link="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors" %}
-<a href="{% url 'ops:dashboard' %}" class="{{ link }} {% nav_class 'dashboard' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span>
-</a>
-{% if user.role == 'OWNER' or user.role == 'ADMINISTRATOR' %}
-<p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-light">Operations</p>
-<a href="{% url 'ops:calendar' %}" class="{{ link }} {% nav_class 'calendar' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Calendar</span>
-</a>
-<a href="{% url 'ops:clients' %}" class="{{ link }} {% nav_class 'clients' 'client_create' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">person</span><span>Clients</span>
-</a>
-<p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-light">Records</p>
-<a href="{% url 'ops:completions' %}" class="{{ link }} {% nav_class 'completions' 'completion_detail' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">task_alt</span><span>Work Completions</span>
-</a>
-<a href="{% url 'ops:invoices' %}" class="{{ link }} {% nav_class 'invoices' 'invoice_detail' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span><span>Contractor Invoices</span>
-</a>
-<p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-light">Billing</p>
-<a href="{% url 'ops:client_invoices' %}" class="{{ link }} {% nav_class 'client_invoices' 'client_invoice_create' 'client_invoice_detail' 'client_invoice_edit' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">request_quote</span><span>Client Invoices</span>
-</a>
-<p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-light">Insights</p>
-<a href="{% url 'ops:profitability' %}" class="{{ link }} {% nav_class 'profitability' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">bar_chart</span><span>Profitability</span>
-</a>
-{% if user.role == 'OWNER' %}
-<p class="px-3 pt-4 pb-1 text-[11px] font-semibold uppercase tracking-wider text-ink-light">Admin</p>
-<a href="{% url 'ops:company_settings' %}" class="{{ link }} {% nav_class 'company_settings' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">settings</span><span>Company Settings</span>
-</a>
-{% endif %}
-{% elif user.role == 'CONTRACTOR' %}
-<a href="{% url 'ops:my_jobs' %}" class="{{ link }} {% nav_class 'my_jobs' 'clock_out' 'work_detail' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">work_history</span><span>My Jobs</span>
-</a>
-<a href="{% url 'ops:my_calendar' %}" class="{{ link }} {% nav_class 'my_calendar' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>My Calendar</span>
-</a>
-<a href="{% url 'ops:invoices' %}" class="{{ link }} {% nav_class 'invoices' 'invoice_detail' 'invoice_create' 'invoice_edit' %}">
-    <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span><span>My Invoices</span>
-</a>
-{% endif %}
+{% with item='ui-nav-item flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-colors' off='text-ink-light/50 cursor-not-allowed' %}
+<div class="space-y-1">
+    <a href="{% url 'ops:dashboard' %}" class="{{ item }} {% nav_class 'dashboard' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">dashboard</span><span>Dashboard</span>
+    </a>
+    <a href="{% url 'ops:my_sites' %}" class="{{ item }} {% nav_class 'my_sites' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Sites</span>
+    </a>
+    <a href="{% url 'ops:my_jobs' %}" class="{{ item }} {% nav_class 'my_jobs' 'my_calendar' 'clock_out' 'work_detail' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">calendar_month</span><span>Services</span>
+    </a>
+    <a href="{% url 'ops:invoices' %}" class="{{ item }} {% nav_class 'invoices' 'invoice_detail' 'invoice_create' 'invoice_edit' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">receipt_long</span><span>Invoices</span>
+    </a>
+    <a href="{% url 'ops:my_earnings' %}" class="{{ item }} {% nav_class 'my_earnings' %}">
+        <span class="material-symbols-outlined" aria-hidden="true">payments</span><span>Earnings</span>
+    </a>
+</div>
+
+<div class="ui-nav-divider" role="separator"></div>
+
+<div class="space-y-1">
+    <!-- No contractor Profile or Help page exists yet -->
+    <span class="{{ item }} {{ off }}" title="Profile isn't available yet" aria-disabled="true">
+        <span class="material-symbols-outlined" aria-hidden="true">person</span><span>Profile</span>
+    </span>
+    <span class="{{ item }} {{ off }}" title="Help isn't available yet" aria-disabled="true">
+        <span class="material-symbols-outlined" aria-hidden="true">help</span><span>Help</span>
+    </span>
+    <a href="{% url 'ops:logout' %}" class="{{ item }} text-ink-light hover:bg-surface-container hover:text-ink">
+        <span class="material-symbols-outlined" aria-hidden="true">logout</span><span>Logout</span>
+    </a>
+</div>
 {% endwith %}

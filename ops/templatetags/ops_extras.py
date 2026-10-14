@@ -10,9 +10,9 @@ NAV_IDLE = "text-ink-light hover:bg-surface-container hover:text-ink"
 
 @register.simple_tag(takes_context=True)
 def nav_class(context, *url_names):
-    """Sidebar link classes: highlighted when the current URL name matches."""
+    """Sidebar link classes: highlighted when the page's `active` value (if passed) or the current URL name matches."""
     match = getattr(context.get("request"), "resolver_match", None)
-    current = match.url_name if match else ""
+    current = context.get("active") or (match.url_name if match else "")
     return NAV_ACTIVE if current in url_names else NAV_IDLE
 
 
