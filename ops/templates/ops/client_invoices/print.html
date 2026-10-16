@@ -4,18 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ invoice.invoice_number }} - SubSync</title>
-    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* Always a white A4 sheet, whatever theme the app is in. */
         @page { size: A4; margin: 16mm; }
         * { box-sizing: border-box; }
-        body { margin: 0; background: #E4DFD9; color: #222221; font-family: 'Pretendard Variable', Pretendard, system-ui, sans-serif; font-size: 13px; color-scheme: light; }
+        body { margin: 0; background: #E4DFD9; color: #222221; font-family: 'Poppins', system-ui, sans-serif; font-size: 13px; color-scheme: light; }
         .toolbar { display: flex; justify-content: center; gap: 8px; padding: 16px; }
         .toolbar button, .toolbar a { font: inherit; padding: 8px 16px; border-radius: 10px; border: 1px solid #D8D3CB; background: #fff; color: #222221; cursor: pointer; text-decoration: none; }
         .toolbar button { background: #222221; color: #fff; border-color: #222221; }
         .sheet { width: 210mm; min-height: 297mm; margin: 0 auto 24px; background: #fff; padding: 18mm 16mm; box-shadow: 0 4px 24px rgb(0 0 0 / 0.08); }
         header { display: flex; justify-content: space-between; align-items: flex-start; gap: 24px; }
-        header img { height: 40px; }
+        header img { height: 40px; max-width: 200px; object-fit: contain; }
         h1 { margin: 0; font-size: 28px; letter-spacing: 0.02em; text-align: right; }
         .muted { color: #5C5952; }
         .meta { margin-top: 6px; text-align: right; line-height: 1.6; }
@@ -46,7 +46,7 @@
     <main class="sheet">
         <header>
             <div>
-                <img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync">
+                {% if company.logo %}<img src="{{ company.logo.url }}" alt="{{ company.name }} logo">{% else %}<img src="{% static 'images/subsync-logo.svg' %}" alt="SubSync">{% endif %}
                 <div class="muted" style="margin-top: 10px; line-height: 1.6;">
                     {{ company.name }}{% if company.abn %}<br>ABN {{ company.abn }}{% endif %}
                     {% if company.address %}<br>{{ company.address }}{% endif %}
@@ -54,7 +54,7 @@
                 </div>
             </div>
             <div>
-                <h1>INVOICE</h1>
+                <h1>{% if invoice.gst %}TAX INVOICE{% else %}INVOICE{% endif %}</h1>
                 <div class="meta">
                     <strong>{{ invoice.invoice_number }}</strong><br>
                     <span class="muted">Date</span> {{ invoice.invoice_date|date:"j M Y" }}<br>
@@ -89,7 +89,11 @@
             </tbody>
         </table>
         <table class="totals">
-            <tr class="grand"><td>Total (AUD)</td><td class="num">{{ invoice.amount|money }}</td></tr>
+            {% if totals.gst is not None %}
+            <tr><td>Subtotal (ex GST)</td><td class="num">{{ totals.subtotal|money }}</td></tr>
+            <tr><td>GST (10%)</td><td class="num">{{ totals.gst|money }}</td></tr>
+            {% endif %}
+            <tr class="grand"><td>Total (AUD){% if totals.gst is not None %} incl. GST{% endif %}</td><td class="num">{{ totals.total|money }}</td></tr>
         </table>
 
         <section class="notes">

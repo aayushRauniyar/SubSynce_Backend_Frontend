@@ -4,26 +4,26 @@
 {% block title %}{{ invoice.invoice_number }} - SubSync{% endblock %}
 
 {% block page %}
-<a href="{% url 'ops:invoices' %}" class="inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4">
+<a href="{% url 'ops:invoices' %}" class="ui-back inline-flex items-center gap-1 text-sm text-ink-light hover:text-ink mb-4">
     <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">arrow_back</span>Invoices
 </a>
-<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+<div class="ui-page-header flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
     <div class="flex flex-wrap items-center gap-3">
-        <h1 class="text-2xl font-bold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
+        <h1 class="ui-title text-2xl font-semibold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
         <span class="pill pill-{{ invoice.status|lower }}">{{ invoice.status|label }}</span>
         {% if check.flags and invoice.status == 'PENDING' %}<span class="pill pill-flagged">{{ check.flags|length }} flag{{ check.flags|length|pluralize }}</span>{% endif %}
     </div>
     <div class="flex flex-wrap gap-2">
-        <a href="{% url 'ops:invoice_print' invoice.pk %}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">
+        <a href="{% url 'ops:invoice_print' invoice.pk %}" target="_blank" rel="noopener" class="ui-btn ui-btn-secondary inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">
             <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">print</span>Print View
         </a>
         {% if user.role == 'CONTRACTOR' and invoice.status == 'PENDING' %}
-        <a href="{% url 'ops:invoice_edit' invoice.pk %}" class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">
+        <a href="{% url 'ops:invoice_edit' invoice.pk %}" class="ui-btn ui-btn-secondary inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-surface-container-high text-sm font-medium hover:bg-surface-container">
             <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">edit</span>Edit
         </a>
         <form method="post" action="{% url 'ops:invoice_delete' invoice.pk %}" onsubmit="return confirm('Delete invoice {{ invoice.invoice_number }}? This can’t be undone.');">
             {% csrf_token %}
-            <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-error/30 text-error text-sm font-medium hover:bg-error/10">
+            <button class="ui-btn ui-btn-danger inline-flex items-center gap-1.5 px-3 py-2 rounded-xl border border-error/30 text-error text-sm font-medium hover:bg-error/10">
                 <span class="material-symbols-outlined" style="font-size: 18px;" aria-hidden="true">delete</span>Delete
             </button>
         </form>
@@ -33,7 +33,7 @@
 
 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
     <div class="lg:col-span-2 space-y-4">
-        <dl class="p-5 card grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <dl class="ui-facts p-5 card grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div><dt class="text-ink-light">Site</dt><dd class="font-medium text-ink">{{ invoice.site.name }}</dd></div>
             <div><dt class="text-ink-light">Contractor</dt><dd class="font-medium text-ink">{{ invoice.created_by.username }}</dd></div>
             <div><dt class="text-ink-light">Invoice date</dt><dd class="font-medium text-ink">{{ invoice.invoice_date|date:"j M Y" }}</dd></div>
@@ -41,8 +41,8 @@
         </dl>
 
         <section class="card overflow-hidden" aria-labelledby="items-heading">
-            <h2 id="items-heading" class="text-base font-semibold text-ink px-5 pt-5 pb-3">Line Items</h2>
-            <table class="w-full text-sm">
+            <h2 id="items-heading" class="ui-section-title text-base font-semibold text-ink px-5 pt-5 pb-3">Line Items</h2>
+            <div class="overflow-x-auto"><table class="ui-table w-full text-sm">
                 <thead class="text-left text-xs uppercase tracking-wider text-ink-light">
                     <tr><th class="px-5 py-2">Description</th><th class="px-5 py-2 text-right">Qty</th><th class="px-5 py-2 text-right">Unit price</th><th class="px-5 py-2 text-right">Total</th></tr>
                 </thead>
@@ -53,14 +53,20 @@
                     <tr><td colspan="4" class="px-5 py-3 text-ink-light">Submitted without line items (single amount).</td></tr>
                     {% endfor %}
                 </tbody>
-                <tfoot><tr class="border-t border-surface-container"><td colspan="3" class="px-5 py-3 text-right font-semibold">Total (AUD)</td><td class="px-5 py-3 text-right font-bold tabular-nums">{{ invoice.amount|money }}</td></tr></tfoot>
-            </table>
+                <tfoot>
+                    {% if totals.gst is not None %}
+                    <tr class="border-t border-surface-container"><td colspan="3" class="px-5 pt-3 pb-1 text-right text-ink-light">Subtotal (ex GST)</td><td class="px-5 pt-3 pb-1 text-right tabular-nums">{{ totals.subtotal|money }}</td></tr>
+                    <tr><td colspan="3" class="px-5 py-1 text-right text-ink-light">GST (10%)</td><td class="px-5 py-1 text-right tabular-nums">{{ totals.gst|money }}</td></tr>
+                    {% endif %}
+                    <tr class="border-t border-surface-container"><td colspan="3" class="px-5 py-3 text-right font-semibold">Total (AUD){% if totals.gst is not None %} incl. GST{% endif %}</td><td class="px-5 py-3 text-right font-bold tabular-nums">{{ totals.total|money }}</td></tr>
+                </tfoot>
+            </table></div>
         </section>
 
         {% if extra.notes or extra.terms or invoice.remarks %}
-        <section class="p-5 card grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div><h2 class="font-semibold text-ink mb-1">Notes</h2><p class="text-ink-light whitespace-pre-line">{{ extra.notes|default:invoice.remarks|default:"—" }}</p></div>
-            <div><h2 class="font-semibold text-ink mb-1">Payment terms</h2><p class="text-ink-light whitespace-pre-line">{{ extra.terms|default:"—" }}</p></div>
+        <section class="ui-facts p-5 card grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+            <div><h2 class="ui-fact-label font-semibold text-ink mb-1">Notes</h2><p class="text-ink-light whitespace-pre-line">{{ extra.notes|default:invoice.remarks|default:"—" }}</p></div>
+            <div><h2 class="ui-fact-label font-semibold text-ink mb-1">Payment terms</h2><p class="text-ink-light whitespace-pre-line">{{ extra.terms|default:"—" }}</p></div>
         </section>
         {% endif %}
 
@@ -133,7 +139,7 @@
         </section>
         {% elif invoice.status != 'PENDING' %}
         <section class="p-5 card text-sm" aria-labelledby="decided-heading">
-            <h2 id="decided-heading" class="text-base font-semibold text-ink mb-2">{{ invoice.status|label }}</h2>
+            <h2 id="decided-heading" class="ui-section-title text-base font-semibold text-ink mb-2">{{ invoice.status|label }}</h2>
             <p class="text-ink-light">By {{ invoice.verified_by.username|default:"—" }} on {{ invoice.verified_at|date:"j M Y, g:i A"|default:"—" }}</p>
             {% if invoice.verification_notes %}<p class="mt-3 text-ink whitespace-pre-line">{{ invoice.verification_notes }}</p>{% endif %}
         </section>

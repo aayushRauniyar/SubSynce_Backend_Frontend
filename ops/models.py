@@ -81,7 +81,7 @@ class ClientInvoiceLineItem(LineItemBase):
 
 
 class CompanyProfile(models.Model):
-    """Single row: business details printed on invoices. The logo is the fixed SubSync logo."""
+    """Single row: business details printed on invoices, plus an optional uploaded logo."""
 
     name = models.CharField(max_length=120, default="SubSync")
     abn = models.CharField("ABN", max_length=30, blank=True)
@@ -89,6 +89,7 @@ class CompanyProfile(models.Model):
     email = models.EmailField(blank=True)
     address = models.CharField(max_length=255, blank=True)
     default_terms = models.TextField(blank=True, default="Payment within 14 days.")
+    logo = models.ImageField(upload_to="company_logo/", blank=True, null=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):

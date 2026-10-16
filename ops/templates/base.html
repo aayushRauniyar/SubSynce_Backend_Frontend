@@ -13,16 +13,18 @@
         (function () {
             var theme = 'light';
             try { theme = localStorage.getItem('subsync-theme') || 'light'; } catch (e) {}
+            // Sign-in pages are designed light-only (no toggle there).
+            if ({% block force_light_theme %}false{% endblock %}) theme = 'light';
             var dark = theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
             document.documentElement.classList.toggle('dark', dark);
             document.documentElement.setAttribute('data-theme', theme);
         })();
     </script>
     
-    <!-- Pretendard Font -->
-    <link rel="preconnect" href="https://cdn.jsdelivr.net">
-    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
-    
+    <!-- Poppins: the one app font (Tailwind's font-sans below), as in the SubSync designs. Loaded once, here. -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Material Symbols Icons -->
     <!-- Material Symbols Icons: one fixed style (not the multi-MB variable font), and
          display=block so icon names stay invisible instead of showing as text while it loads. -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -68,7 +70,7 @@
                     transitionDuration: { DEFAULT: '300ms' },
                     transitionTimingFunction: { DEFAULT: 'cubic-bezier(0, 0, 0.2, 1)' },
                     fontFamily: {
-                        sans: ['Pretendard Variable', 'Pretendard', 'system-ui', 'sans-serif'],
+                        sans: ['Poppins', 'system-ui', 'sans-serif'],
                     },
                 }
             }
@@ -76,11 +78,11 @@
     </script>
     
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=palette-v4">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}?v=merge-v2">
     
     {% block extra_head %}{% endblock %}
 </head>
-<body class="bg-surface text-ink font-sans min-h-screen">
+<body class="bg-surface text-ink font-sans min-h-screen"{% if user.role == 'CONTRACTOR' %} data-ui="contractor"{% endif %}>
     
     <!-- Messages (Success, Error, etc.) -->
     {% if messages %}
@@ -100,6 +102,31 @@
     
     <!-- JavaScript -->
     <script src="{% static 'js/theme.js' %}"></script>
+    <script>
+        // Show/hide for password fields: a button with data-show-password="<input id>" flips the input
+        // between password and text. Used when creating accounts and setting a new password.
+        document.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-show-password]');
+            if (!button) return;
+            var input = document.getElementById(button.dataset.showPassword);
+            if (!input) return;
+            var show = input.type === 'password';
+            input.type = show ? 'text' : 'password';
+            button.setAttribute('aria-pressed', show ? 'true' : 'false');
+            button.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            button.querySelector('.material-symbols-outlined').textContent = show ? 'visibility' : 'visibility_off';
+        });
+        // Re-hide passwords whenever a form is reset (closing and reopening a modal).
+        document.addEventListener('reset', function (event) {
+            event.target.querySelectorAll('[data-show-password]').forEach(function (button) {
+                var input = document.getElementById(button.dataset.showPassword);
+                if (input) input.type = 'password';
+                button.setAttribute('aria-pressed', 'false');
+                button.setAttribute('aria-label', 'Show password');
+                button.querySelector('.material-symbols-outlined').textContent = 'visibility_off';
+            });
+        }, true);
+    </script>
     {% block extra_js %}{% endblock %}
     
     <!-- Mobile sidebar drawer: works for any page with a [data-sidebar] aside -->
@@ -126,6 +153,35 @@
             if (overlay) overlay.addEventListener('click', function () { setOpen(false); });
             document.addEventListener('keydown', function (event) {
                 if (event.key === 'Escape') setOpen(false);
+            });
+        })();
+    </script>
+
+    <!-- Account menu (top-right): toggle on click, close on outside click or Escape -->
+    <script>
+        (function () {
+            function setOpen(menu, open) {
+                menu.querySelector('[data-account-panel]').classList.toggle('hidden', !open);
+                menu.querySelector('[data-account-trigger]').setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            document.addEventListener('click', function (event) {
+                document.querySelectorAll('[data-account-menu]').forEach(function (menu) {
+                    var panel = menu.querySelector('[data-account-panel]');
+                    if (menu.querySelector('[data-account-trigger]').contains(event.target)) {
+                        setOpen(menu, panel.classList.contains('hidden'));
+                    } else if (!panel.contains(event.target)) {
+                        setOpen(menu, false);
+                    }
+                });
+            });
+            document.addEventListener('keydown', function (event) {
+                if (event.key !== 'Escape') return;
+                document.querySelectorAll('[data-account-menu]').forEach(function (menu) {
+                    if (!menu.querySelector('[data-account-panel]').classList.contains('hidden')) {
+                        setOpen(menu, false);
+                        menu.querySelector('[data-account-trigger]').focus();
+                    }
+                });
             });
         })();
     </script>

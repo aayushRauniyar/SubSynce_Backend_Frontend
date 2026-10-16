@@ -85,6 +85,21 @@ class ClientInvoiceBuilderTests(TestCase):
         self.assertEqual(inv.builder.terms, "14 days")
         self.assertEqual([i.description for i in inv.line_items.all()], ["Weekly office clean", "Window add-on"])
 
+    def test_gst_tick_box_is_saved_and_printed(self):
+        self.client.post(reverse("ops:client_invoice_create"),
+                         builder_post(self.site, number=f"CINV-{YEAR}-001", gst="on"))
+        inv = ClientInvoice.objects.get(invoice_number=f"CINV-{YEAR}-001")
+        self.assertTrue(inv.gst)
+        self.assertEqual(inv.amount, Decimal("1280.00"))
+        resp = self.client.get(reverse("ops:client_invoice_print", args=[inv.pk]))
+        self.assertContains(resp, "TAX INVOICE")
+        self.assertContains(resp, "$128.00")
+        self.assertContains(resp, "$1,408.00")
+        self.client.post(reverse("ops:client_invoice_edit", args=[inv.pk]), builder_post(self.site, number=inv.invoice_number))
+        inv.refresh_from_db()
+        self.assertFalse(inv.gst)
+        self.assertNotContains(self.client.get(reverse("ops:client_invoice_print", args=[inv.pk])), "GST (10%)")
+
     def test_owner_can_create(self):
         login(self.client, self.owner)
         self.client.post(reverse("ops:client_invoice_create"), builder_post(self.site, number="CINV-OWN-1"))

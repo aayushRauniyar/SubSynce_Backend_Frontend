@@ -2,7 +2,7 @@
 {# Needs `clients`, `frequencies` and `contractors` in context; `next` returns to the current page. #}
 <!-- Add / Edit Site modal -->
 <div id="site-modal" class="hidden fixed inset-0 z-40 items-center justify-center bg-ink/40 px-4" onclick="if (event.target === this) closeSiteModal();">
-    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6 font-['Poppins']">
+    <div class="bg-white rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
         <div class="flex items-center justify-between mb-5">
             <h2 id="site-modal-title" class="text-lg font-semibold text-ink">Add Site</h2>
             <button type="button" onclick="closeSiteModal()" class="p-1.5 rounded-lg hover:bg-surface-container">
@@ -10,7 +10,7 @@
             </button>
         </div>
         {% with field='w-full px-3.5 py-2.5 rounded-xl bg-surface border border-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary text-sm' label='block text-sm font-medium text-ink mb-1.5' %}
-        <form id="site-form" method="post" action="{% url 'ops:site_create' %}">
+        <form id="site-form" method="post" action="{% url 'ops:site_create' %}" enctype="multipart/form-data">
             {% csrf_token %}
             <input type="hidden" name="next" value="{{ request.get_full_path }}">
             <div class="space-y-4">
@@ -51,6 +51,14 @@
                     <label class="{{ label }}" for="site-instructions">Cleaning Instructions</label>
                     <textarea name="cleaning_instructions" id="site-instructions" rows="3" class="{{ field }}"></textarea>
                 </div>
+                <div>
+                    <label class="{{ label }}" for="site-images">Site Images</label>
+                    <!-- Existing images (Edit only); tick to remove -->
+                    <div id="site-current-images" class="hidden flex-wrap gap-2 mb-2"></div>
+                    <input type="file" name="images" id="site-images" multiple accept="image/*"
+                           class="block w-full text-xs text-ink-light file:mr-3 file:px-3 file:py-1.5 file:rounded-lg file:border file:border-surface-container-high file:bg-card file:text-xs file:text-ink">
+                    <p class="mt-1 text-[11px] text-ink-light">Images up to 5MB each. New images are added to the site's gallery; the first one is shown in the list.</p>
+                </div>
             </div>
             <div class="flex items-center justify-end gap-3 mt-6">
                 <button type="button" onclick="closeSiteModal()"
@@ -77,9 +85,43 @@
         document.getElementById('site-price').value = data.price || '';
         document.getElementById('site-contractor').value = data.contractor || '';
         document.getElementById('site-instructions').value = data.instructions || '';
+        document.getElementById('site-images').value = '';
+        renderSiteImages(data.images);
         const modal = document.getElementById('site-modal');
         modal.classList.remove('hidden');
         modal.classList.add('flex');
+    }
+
+    // Existing gallery images ("id|url,id|url") as thumbnails with a "remove" checkbox each.
+    function renderSiteImages(value) {
+        const box = document.getElementById('site-current-images');
+        box.innerHTML = '';
+        (value || '').split(',').filter(Boolean).forEach(function (pair) {
+            const parts = pair.split('|');
+            const label = document.createElement('label');
+            label.className = 'relative cursor-pointer';
+            label.title = 'Tick to remove this image';
+            const img = document.createElement('img');
+            img.src = parts[1];
+            img.alt = '';
+            img.className = 'w-16 h-16 rounded-xl object-cover border border-surface-container-high bg-surface-container';
+            img.onerror = function () {  // missing file: same placeholder as the list thumbnails
+                const ph = document.createElement('span');
+                ph.className = 'w-16 h-16 rounded-xl bg-surface-container border border-surface-container-high text-ink-light flex items-center justify-center';
+                ph.innerHTML = '<span class="material-symbols-outlined" style="font-size: 22px;" aria-hidden="true">image</span>';
+                img.replaceWith(ph);
+            };
+            const box2 = document.createElement('input');
+            box2.type = 'checkbox';
+            box2.name = 'remove_images';
+            box2.value = parts[0];
+            box2.className = 'absolute top-1 right-1 w-4 h-4';
+            box2.setAttribute('aria-label', 'Remove image');
+            label.append(img, box2);
+            box.appendChild(label);
+        });
+        box.classList.toggle('hidden', !box.children.length);
+        box.classList.toggle('flex', !!box.children.length);
     }
 
     function closeSiteModal() {

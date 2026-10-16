@@ -13,6 +13,8 @@ from schedule.model.cleaningschedule import ServiceSchedule
 
 MAX_PHOTO_SIZE_BYTES = 5 * 1024 * 1024  # 5MB, matches the "JPG, PNG up to 5MB" hint
 ALLOWED_PHOTO_CONTENT_TYPES = {"image/jpeg", "image/png"}
+MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024
+ALLOWED_LOGO_CONTENT_TYPES = {"image/jpeg", "image/png", "image/webp"}
 
 
 class ClientForm(forms.ModelForm):
@@ -119,7 +121,7 @@ class OpsPasswordResetForm(PasswordResetForm):
 class ScheduleForm(forms.ModelForm):
     """
     Same rules as the admin Schedule API: the site needs an assigned contractor,
-    new schedules start as SCHEDULED. Client/subcontractor come from the site.
+    new schedules start as SCHEDULED. Client/contractor come from the site.
     Status changes go through ScheduleStatusForm.
     """
 
@@ -211,42 +213,39 @@ class UserForm(forms.ModelForm):
         return user
 
 
+class SubcontractorForm(UserForm):
+    """Edit a contractor from the Contractors page: UserForm plus the UserDetail phone; role stays CONTRACTOR."""
+
+    phone = forms.CharField(max_length=255, required=False)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["role"].choices = [("CONTRACTOR", "Contractor")]
+        detail = getattr(self.instance, "user_detail", None)
+        if detail:
+            self.initial["phone"] = detail.phone
+
+    def clean_phone(self):
+        # UserDetail.phone is unique, including soft-deleted rows still in the table.
+        phone = self.cleaned_data["phone"].strip() or None
+        if phone and UserDetail.global_objects.filter(phone=phone).exclude(user=self.instance).exists():
+            raise forms.ValidationError("Another user already has this phone number.")
+        return phone
+
+    def save(self):
+        user = super().save()
+        UserDetail.objects.filter(user=user).update(phone=self.cleaned_data["phone"])
+        return user
+
+
 def clean_evidence_photos(files):
-    """Validate work evidence photos: real images, 5MB max each."""
+    """Validate uploaded photos (site images): real images, 5MB max each."""
     field = forms.ImageField()
     for f in files:
         field.clean(f)
         if f.size > MAX_PHOTO_SIZE_BYTES:
             raise forms.ValidationError("Each photo must be 5MB or smaller.")
     return files
-
-
-MAX_EVIDENCE_PHOTOS = 5
-
-
-class ClockOutForm(forms.Form):
-    """Finish a job: notes, where it was done, and optional photo evidence."""
-
-    completion_notes = forms.CharField(
-        required=False, widget=forms.Textarea(attrs={"rows": 4}), max_length=2000
-    )
-    location = forms.CharField(required=False, max_length=255)
-
-    def __init__(self, *args, photos=None, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.photos = photos or []
-
-    def clean(self):
-        cleaned = super().clean()
-        if len(self.photos) > MAX_EVIDENCE_PHOTOS:
-            raise forms.ValidationError(f"Upload up to {MAX_EVIDENCE_PHOTOS} photos.")
-        for photo in self.photos:
-            if getattr(photo, "content_type", None) not in ALLOWED_PHOTO_CONTENT_TYPES:
-                raise forms.ValidationError(f"{photo.name}: photos must be JPG or PNG.")
-            if photo.size > MAX_PHOTO_SIZE_BYTES:
-                raise forms.ValidationError(f"{photo.name}: photos must be 5MB or smaller.")
-        return cleaned
-
 
 
 # --- Invoice builder ---------------------------------------------------------
@@ -263,6 +262,7 @@ class BaseInvoiceHeaderForm(forms.Form):
     service_period_end = forms.DateField()
     notes = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}), max_length=2000)
     terms = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}), max_length=2000)
+    gst = forms.BooleanField(required=False, label="Include GST (10%)")
 
     def __init__(self, *args, instance=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -360,5 +360,17 @@ class DecisionForm(forms.Form):
 class CompanyProfileForm(forms.ModelForm):
     class Meta:
         model = CompanyProfile
-        fields = ["name", "abn", "phone", "email", "address", "default_terms"]
+        fields = ["name", "abn", "phone", "email", "address", "default_terms", "logo"]
         widgets = {"default_terms": forms.Textarea(attrs={"rows": 3})}
+
+    def clean_logo(self):
+        logo = self.cleaned_data.get("logo")
+        if not logo or not hasattr(logo, "content_type"):
+            return logo
+
+        if logo.content_type not in ALLOWED_LOGO_CONTENT_TYPES:
+            raise forms.ValidationError("Logo must be a JPG, PNG or WebP image.")
+        if logo.size > MAX_LOGO_SIZE_BYTES:
+            raise forms.ValidationError("Logo must be 2MB or smaller.")
+
+        return logo

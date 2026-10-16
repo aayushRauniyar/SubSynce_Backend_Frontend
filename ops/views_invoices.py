@@ -44,6 +44,17 @@ def invoice_list_view(request):
     query = request.GET.get("q", "").strip()
     if status in ("PENDING", "APPROVED", "REJECTED"):
         invoices = invoices.filter(status=status)
+    # Date range on the invoice date; either end can be left open.
+    start = services.parse_date(request.GET.get("start"))
+    end = services.parse_date(request.GET.get("end"))
+    range_error = None
+    if start and end and start > end:
+        range_error = "The From date must be on or before the To date."
+        start = end = None
+    if start:
+        invoices = invoices.filter(invoice_date__gte=start)
+    if end:
+        invoices = invoices.filter(invoice_date__lte=end)
     if query:
         invoices = invoices.filter(
             Q(invoice_number__icontains=query) | Q(site__name__icontains=query) | Q(created_by__username__icontains=query)
@@ -56,15 +67,64 @@ def invoice_list_view(request):
         approved_total=Sum("amount", filter=Q(status="APPROVED")),
         rejected_count=Count("id", filter=Q(status="REJECTED")),
     )
+    approved_count = base.filter(status="APPROVED").count()
+    totals["approved_hint"] = f"From {approved_count} approved invoice{'' if approved_count == 1 else 's'}"
     params = request.GET.copy()
     params.pop("page", None)
     return render(request, "ops/invoices/list.html", {
         "page_obj": Paginator(invoices, 15).get_page(request.GET.get("page")),
         "status": status,
         "query": query,
+        "start": start,
+        "end": end,
+        "range_error": range_error,
         "totals": totals,
         "querystring": params.urlencode(),
+        "chart": _earnings_chart(request.user) if request.user.role == CONTRACTOR else None,
     })
+
+
+def _compact_money(value):
+    """Short axis label: $950, $12.5k, $1.2M."""
+    value = float(value)
+    for limit, suffix in ((1_000_000, "M"), (1_000, "k")):
+        if value >= limit:
+            return f"${value / limit:.1f}".rstrip("0").rstrip(".") + suffix
+    return f"${value:.0f}"
+
+
+def _earnings_chart(user):
+    """Data for the My Invoices line graph: approved earnings per month over the last 12 months.
+
+    Drawn as a stretched inline SVG (viewBox 0 0 1000 100, preserveAspectRatio="none") so it
+    needs no chart library. Each month-to-month segment is green when earnings rose, red when
+    they fell and grey when flat; `change` compares this month with last month the same way.
+    """
+    rows = services.monthly_approved_earnings(user)
+    peak = max((r["total"] for r in rows), default=Decimal("0"))
+    top, bottom = 6, 96
+    step = 1000 / (len(rows) - 1)
+    points = []
+    for i, r in enumerate(rows):
+        y = bottom - (float(r["total"] / peak) * (bottom - top) if peak else 0)
+        points.append({**r, "x": round(i * step, 1), "y": round(y, 1)})
+    segments = []
+    for prev, cur in zip(points, points[1:]):
+        trend = "up" if cur["total"] > prev["total"] else "down" if cur["total"] < prev["total"] else "flat"
+        segments.append({"x1": prev["x"], "y1": prev["y"], "x2": cur["x"], "y2": cur["y"], "trend": trend})
+    change = rows[-1]["total"] - rows[-2]["total"]
+    return {
+        "points": points,
+        "segments": segments,
+        "peak": peak,
+        "scale": [_compact_money(peak), _compact_money(peak / 2), "$0"],
+        "year_total": sum((r["total"] for r in rows), Decimal("0")),
+        "this_month": rows[-1],
+        "last_month": rows[-2],
+        "change": change,
+        "change_abs": abs(change),
+        "has_data": bool(peak),
+    }
 
 
 def _save_builder(invoice, header, formset):
@@ -112,6 +172,7 @@ def invoice_create_view(request):
                     invoice_date=data["invoice_date"],
                     service_period_start=data["service_period_start"],
                     service_period_end=data["service_period_end"],
+                    gst=data["gst"],
                     amount=Decimal("0.00"),
                     created_by=request.user,
                 )
@@ -140,7 +201,7 @@ def invoice_edit_view(request, pk):
         if header.is_valid() and formset.is_valid():
             data = header.cleaned_data
             with transaction.atomic():
-                for field in ("invoice_number", "site", "invoice_date", "service_period_start", "service_period_end"):
+                for field in ("invoice_number", "site", "invoice_date", "service_period_start", "service_period_end", "gst"):
                     setattr(invoice, field, data[field])
                 _save_builder(invoice, header, formset)
             messages.success(request, f"Invoice {invoice.invoice_number} updated.")
@@ -155,6 +216,7 @@ def invoice_edit_view(request, pk):
             "service_period_end": invoice.service_period_end,
             "notes": extra.notes if extra else (invoice.remarks or ""),
             "terms": extra.terms if extra else "",
+            "gst": invoice.gst,
         })
         items = [
             {"description": i.description, "quantity": i.quantity, "unit_price": i.unit_price}
@@ -184,6 +246,7 @@ def invoice_detail_view(request, pk):
         "invoice": invoice,
         "items": invoice.line_items.all(),
         "extra": getattr(invoice, "builder", None),
+        "totals": services.invoice_totals(invoice),
         "decision_form": DecisionForm(),
     }
     if is_staff_user(request.user):
@@ -204,6 +267,7 @@ def invoice_decide_view(request, pk):
             "invoice": invoice,
             "items": invoice.line_items.all(),
             "extra": getattr(invoice, "builder", None),
+            "totals": services.invoice_totals(invoice),
             "decision_form": form,
             "check": services.verify_invoice(invoice),
         }, status=400)
@@ -225,5 +289,6 @@ def invoice_print_view(request, pk):
         "invoice": invoice,
         "items": items,
         "extra": getattr(invoice, "builder", None),
+        "totals": services.invoice_totals(invoice),
         "company": CompanyProfile.load(),
     })

@@ -23,12 +23,14 @@ urlpatterns = [
     # Sites (protected - Administrator only)
     path('sites/', views.sites_view, name='sites'),
     path('sites/add/', views.site_create_view, name='site_create'),
+    path('sites/<uuid:pk>/', views.site_detail_view, name='site_detail'),
     path('sites/<uuid:pk>/edit/', views.site_update_view, name='site_update'),
     path('sites/<uuid:pk>/delete/', views.site_delete_view, name='site_delete'),
 
     # Schedules (protected - Administrator only)
     path('schedules/', views.schedules_view, name='schedules'),
     path('schedules/add/', views.schedule_create_view, name='schedule_create'),
+    path('schedules/<uuid:pk>/', views.schedule_detail_view, name='schedule_detail'),
     path('schedules/<uuid:pk>/edit/', views.schedule_update_view, name='schedule_update'),
     path('schedules/<uuid:pk>/status/', views.schedule_status_view, name='schedule_status'),
     path('schedules/<uuid:pk>/delete/', views.schedule_delete_view, name='schedule_delete'),
@@ -39,8 +41,10 @@ urlpatterns = [
     path('users/<uuid:pk>/edit/', views.user_update_view, name='user_update'),
     path('users/<uuid:pk>/delete/', views.user_delete_view, name='user_delete'),
 
-    # Subcontractors (protected - Administrator only, read-only)
-    path('subcontractors/', views.subcontractors_view, name='subcontractors'),
+    # Contractors (Administrator and Owner): list, detail, edit; delete uses user_delete
+    path('contractors/', views.subcontractors_view, name='subcontractors'),
+    path('contractors/<uuid:pk>/', views.subcontractor_detail_view, name='subcontractor_detail'),
+    path('contractors/<uuid:pk>/edit/', views.subcontractor_update_view, name='subcontractor_update'),
 
     # Password reset (Django's built-in views and tokens)
     path('forgot-password/', auth_views.PasswordResetView.as_view(
@@ -61,14 +65,11 @@ urlpatterns = [
         template_name='ops/password_reset_complete.html',
     ), name='password_reset_complete'),
 
-    # Contractor portal quick actions (session versions of the work API's clock-in/out)
-    path('portal/check-in/', views.portal_check_in_view, name='portal_check_in'),
-    path('portal/check-out/', views.portal_check_out_view, name='portal_check_out'),
-
-    # Work completion (contractor clock-in/out, staff log)
+    # Work completion (contractor jobs, staff log)
     path('jobs/', views_work.my_jobs_view, name='my_jobs'),
-    path('jobs/<uuid:schedule_id>/clock-in/', views_work.clock_in_view, name='clock_in'),
-    path('work/<uuid:work_id>/clock-out/', views_work.clock_out_view, name='clock_out'),
+    path('my-sites/', views.my_sites_view, name='my_sites'),
+    path('my-sites/<uuid:pk>/', views.my_site_detail_view, name='my_site_detail'),
+    path('jobs/<uuid:pk>/', views.my_job_detail_view, name='my_job_detail'),
     path('work/<uuid:work_id>/', views_work.work_detail_view, name='work_detail'),
     path('completions/', views_work.completions_view, name='completions'),
     path('completions/<uuid:work_id>/', views_work.work_detail_view, name='completion_detail'),

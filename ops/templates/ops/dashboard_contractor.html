@@ -5,7 +5,7 @@
 
 {% block page %}
 <div class="mb-6">
-    <h1 class="text-2xl font-bold text-ink">Hi, {{ user.username }}</h1>
+    <h1 class="text-2xl font-semibold text-ink">Hi, {{ user.username }}</h1>
     <p class="text-ink-light text-sm mt-1">Here are your jobs for today and what's coming up.</p>
 </div>
 
@@ -15,18 +15,6 @@
     {% include 'ops/partials/stat_card.html' with icon='pending_actions' tone='warning' value=summary.invoices.pending label='Invoices pending' %}
     {% include 'ops/partials/stat_card.html' with icon='payments' tone='success' value=summary.earnings|money label='Approved earnings' %}
 </div>
-
-{% if summary.in_progress %}
-<section class="mb-4 p-4 rounded-2xl bg-warning/10 border border-warning/30" aria-labelledby="active-heading">
-    <h2 id="active-heading" class="text-sm font-semibold text-ink mb-2">You're clocked in</h2>
-    {% for work in summary.in_progress %}
-    <div class="flex items-center justify-between gap-3 py-1">
-        <p class="text-sm text-ink">{{ work.schedule.site.name }} · since {{ work.check_in_time|time:"g:i A" }}</p>
-        <a href="{% url 'ops:clock_out' work.id %}" class="px-3 py-2 rounded-xl bg-primary text-on-primary text-sm font-medium hover:bg-primary-hover transition-colors">Clock Out</a>
-    </div>
-    {% endfor %}
-</section>
-{% endif %}
 
 <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
     <section class="card p-5 " aria-labelledby="today-heading">
@@ -39,7 +27,7 @@
                     <p class="text-sm font-medium text-ink truncate">{{ job.site.name }}</p>
                     <p class="text-xs text-ink-light truncate">{{ job.scheduled_time|time:"g:i A" }} · {{ job.site.address }}</p>
                 </div>
-                {% with today=job.scheduled_date %}{% include 'ops/partials/job_actions.html' %}{% endwith %}
+                {% include 'ops/partials/job_actions.html' %}
             </li>
             {% endfor %}
         </ul>

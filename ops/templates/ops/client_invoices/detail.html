@@ -9,7 +9,7 @@
 </a>
 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
     <div class="flex flex-wrap items-center gap-3">
-        <h1 class="text-2xl font-bold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
+        <h1 class="text-2xl font-semibold text-ink tabular-nums">{{ invoice.invoice_number }}</h1>
         <span class="pill pill-{{ invoice.status|lower }}">{{ invoice.status|label }}</span>
     </div>
     <div class="flex flex-wrap gap-2">
@@ -52,7 +52,13 @@
                     <tr><td colspan="4" class="px-5 py-3 text-ink-light">Created without line items (single amount).</td></tr>
                     {% endfor %}
                 </tbody>
-                <tfoot><tr class="border-t border-surface-container"><td colspan="3" class="px-5 py-3 text-right font-semibold">Total (AUD)</td><td class="px-5 py-3 text-right font-bold tabular-nums">{{ invoice.amount|money }}</td></tr></tfoot>
+                <tfoot>
+                    {% if totals.gst is not None %}
+                    <tr class="border-t border-surface-container"><td colspan="3" class="px-5 pt-3 pb-1 text-right text-ink-light">Subtotal (ex GST)</td><td class="px-5 pt-3 pb-1 text-right tabular-nums">{{ totals.subtotal|money }}</td></tr>
+                    <tr><td colspan="3" class="px-5 py-1 text-right text-ink-light">GST (10%)</td><td class="px-5 py-1 text-right tabular-nums">{{ totals.gst|money }}</td></tr>
+                    {% endif %}
+                    <tr class="border-t border-surface-container"><td colspan="3" class="px-5 py-3 text-right font-semibold">Total (AUD){% if totals.gst is not None %} incl. GST{% endif %}</td><td class="px-5 py-3 text-right font-bold tabular-nums">{{ totals.total|money }}</td></tr>
+                </tfoot>
             </table>
         </section>
 
@@ -97,7 +103,7 @@
         <section class="p-5 card text-sm" aria-labelledby="work-heading">
             <h2 id="work-heading" class="text-base font-semibold text-ink mb-2">Work in This Period</h2>
             <p class="text-ink-light">{{ work.jobs }} completed job{{ work.jobs|pluralize }} at {{ invoice.site.name }}. At {{ invoice.site.price|money }} per service that's {{ work.value|money }}.</p>
-            {% if invoice.status == 'ISSUED' and work.value != invoice.amount %}<p class="mt-2 text-ink">That differs from this invoice's {{ invoice.amount|money }}, so check the amount before sending it.</p>{% endif %}
+            {% if invoice.status == 'ISSUED' and work.value != invoice.amount %}<p class="mt-2 text-ink">That differs from this invoice's {{ invoice.amount|money }}{% if invoice.gst %} (ex GST){% endif %}, so check the amount before sending it.</p>{% endif %}
         </section>
     </aside>
 </div>

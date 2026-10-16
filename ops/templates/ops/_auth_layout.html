@@ -1,12 +1,10 @@
 {% extends 'base.html' %}
+
+{% block force_light_theme %}true{% endblock %}
 {# Shared shell for the password reset pages: peach background, arc decoration, centered card. #}
 
-{% block extra_head %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
-<main class="min-h-screen flex items-center justify-center px-4 py-12 font-['Poppins'] text-[#222222] bg-gradient-to-b from-[#FCEEE3] via-[#F9F1EB] to-[#F6F5F4] overflow-x-hidden">
+<main class="min-h-screen flex items-center justify-center px-4 py-12 text-[#222222] bg-gradient-to-b from-[#FCEEE3] via-[#F9F1EB] to-[#F6F5F4] overflow-x-hidden">
     <div class="relative w-full {% block card_width %}max-w-[907px]{% endblock %}">
         <!-- Orange arcs near the card's top-right corner -->
         <svg aria-hidden="true" class="hidden lg:block absolute -top-12 -right-11 w-[54px] h-[54px] text-[#F27E22]/40" viewBox="0 0 54 54" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">

@@ -1,14 +1,12 @@
 {% extends 'base.html' %}
+
+{% block force_light_theme %}true{% endblock %}
 {% load static %}
 
 {% block title %}Login - SubSync{% endblock %}
 
-{% block extra_head %}
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
-{% endblock %}
-
 {% block content %}
-<div class="min-h-screen flex bg-[#FBFBFB] font-['Poppins'] text-[#222222]">
+<div class="min-h-screen flex bg-[#FBFBFB] text-[#222222]">
 
     <!-- Left: branding panel (desktop only) -->
     <aside class="hidden lg:flex flex-col justify-center w-[460px] xl:w-[595px] shrink-0 px-10 xl:px-14 py-12 bg-gradient-to-b from-[#F3F2F1] via-[#F7F2EE] to-[#FCEADB] shadow-[4px_0_24px_rgba(0,0,0,0.04)] relative z-10">
@@ -23,10 +21,10 @@
         </span>
 
         <h1 class="mt-6 text-[32px] leading-[1.05] font-semibold">
-            Smart subcontractor<br>management, <span class="text-[#F27E22]">simplified.</span>
+            Smart contractor<br>management, <span class="text-[#F27E22]">simplified.</span>
         </h1>
         <p class="mt-5 max-w-[460px] text-[15px] leading-relaxed text-[#494949]">
-            SubSync helps administrators and subcontractors collaborate securely, stay aligned, and get work done — all in one place.
+            SubSync helps administrators and contractors collaborate securely, stay aligned, and get work done — all in one place.
         </p>
 
         <img src="{% static 'images/login-illustration.svg' %}" alt="SubSync role-based access illustration"
@@ -76,12 +74,12 @@
                 <form method="post" action="{{ request.get_full_path }}" class="mt-12">
                     {% csrf_token %}
                     {% with field='w-full h-11 pl-11 rounded-md border border-[#494949]/25 bg-white text-sm placeholder:text-[#494949]/60 focus:outline-none focus:ring-2 focus:ring-[#F27E22]/30 focus:border-[#F27E22]' %}
-                    <!-- Email (usernames are also accepted by the backend) -->
-                    <label for="username" class="block text-sm font-medium mb-2">Email address</label>
+                    <!-- Email or username: the view resolves an email to its user, otherwise treats it as a username -->
+                    <label for="username" class="block text-sm font-medium mb-2">Email or Username</label>
                     <div class="relative">
-                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#494949]" style="font-size: 18px;">mail</span>
+                        <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#494949]" style="font-size: 18px;">person</span>
                         <input type="text" id="username" name="username" value="{{ identifier }}" required
-                               autocomplete="username" inputmode="email" placeholder="Enter your email"
+                               autocomplete="username" placeholder="Enter your email or username"
                                class="{{ field }} pr-4">
                     </div>
 

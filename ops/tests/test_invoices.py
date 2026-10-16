@@ -139,6 +139,45 @@ class InvoiceBuilderTests(TestCase):
         self.assertContains(resp, "$1,280.00")
         self.assertContains(resp, "size: A4")
 
+    def test_gst_unticked_by_default_and_print_has_no_gst_line(self):
+        login(self.client, self.alex)
+        self.client.post(reverse("ops:invoice_create"), builder_post(self.site))
+        inv = ContractorInvoice.objects.get()
+        self.assertFalse(inv.gst)
+        resp = self.client.get(reverse("ops:invoice_print", args=[inv.pk]))
+        self.assertNotContains(resp, "GST (10%)")
+        self.assertNotContains(resp, "TAX INVOICE")
+        self.assertContains(resp, "$1,280.00")
+
+    def test_gst_ticked_keeps_amount_ex_gst_and_print_adds_gst(self):
+        login(self.client, self.alex)
+        self.client.post(reverse("ops:invoice_create"), builder_post(self.site, gst="on"))
+        inv = ContractorInvoice.objects.get()
+        self.assertTrue(inv.gst)
+        self.assertEqual(inv.amount, Decimal("1280.00"))
+        for name in ("ops:invoice_print", "ops:invoice_detail"):
+            resp = self.client.get(reverse(name, args=[inv.pk]))
+            self.assertContains(resp, "Subtotal (ex GST)")
+            self.assertContains(resp, "$128.00")
+            self.assertContains(resp, "$1,408.00")
+        self.assertContains(self.client.get(reverse("ops:invoice_print", args=[inv.pk])), "TAX INVOICE")
+
+    def test_edit_shows_and_can_untick_gst(self):
+        login(self.client, self.alex)
+        self.client.post(reverse("ops:invoice_create"), builder_post(self.site, gst="on"))
+        inv = ContractorInvoice.objects.get()
+        self.assertContains(self.client.get(reverse("ops:invoice_edit", args=[inv.pk])), 'id="id_gst" value="on" class="w-4 h-4 accent-[#F27E22]" checked')
+        self.client.post(reverse("ops:invoice_edit", args=[inv.pk]), builder_post(self.site))
+        inv.refresh_from_db()
+        self.assertFalse(inv.gst)
+
+    def test_gst_rounds_to_the_cent(self):
+        inv = ContractorInvoice(amount=Decimal("10.05"), gst=True)
+        self.assertEqual(services.invoice_totals(inv), {
+            "subtotal": Decimal("10.05"), "gst": Decimal("1.01"), "total": Decimal("11.06"),
+        })
+        self.assertIsNone(services.invoice_totals(ContractorInvoice(amount=Decimal("10.05")))["gst"])
+
 
 class VerificationTests(TestCase):
     def setUp(self):
